@@ -14,9 +14,9 @@ a9c9719db2df385eca10767b45801d8cf56b386207f7ba11ae33c6978fbb792f  ./DEPLOYMENT_R
 8a2b9440b502a6193073cc34d3804aa1877512266f15f7883a65386409ab2f0f  ./FINAL_HANDOFF_STATUS.md
 74885790945211b4e2b94a806ce10141328a59be2b3625a94545f62434941ce4  ./frontend/app/globals.css
 e46ca57efdfc01f510a69a5f976f0fdf1f35cf4b64ea220469dbd05a222755e6  ./frontend/app/intent/[intentKey]/page.tsx
-1473a99d6878f4b0efea9df6bde4f82a4bff1983e447d9f412a9afde59778b02  ./frontend/app/landing.css
+9300688a22e2d134886f83bf07a60046d00734c3a1ab35a1de6895be4794c84c  ./frontend/app/landing.css
 47a3006b52287ad78b57aba608a89cca71ead0063b31b266a30833e562b3087d  ./frontend/app/layout.tsx
-0c002cfbdb3e718b2bf852b38e1c3742bc993f03008baa56b25a2c185be77079  ./frontend/app/page.tsx
+9c0d174fd020d9618db8262fd3c7320bf87e62177f79a6e0ee4913c00925bb74  ./frontend/app/page.tsx
 ab5a2e31706e537df7587ecb1d5fbada0a391a1c2c977adf3c3137317ef1431c  ./frontend/app/permit/[permitKey]/page.tsx
 20b60ddddc0b8c34d044fd838ea30081bcdd2627f6e52fc8b2df5db7ee1a39d1  ./frontend/app/registry/page.tsx
 1a909d761847975a6a3fda8b7abfb2b1abb6dbe23cdb6abb47e01814f06928aa  ./frontend/app/terms/[licenceKey]/page.tsx
