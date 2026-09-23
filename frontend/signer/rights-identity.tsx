@@ -25,7 +25,10 @@ export function RightsIdentityScope({ children }: { children: React.ReactNode })
       .finally(() => mounted && setReady(true));
 
     const p = provider();
-    const accountHandler = (accounts: string[]) => setAddress(accounts?.[0] || null);
+    const accountHandler = (accounts: string[]) => {
+      setAddress(accounts?.[0] || null);
+      setError("");
+    };
     if (p?.on) p.on("accountsChanged", accountHandler);
     return () => {
       mounted = false;
@@ -67,16 +70,33 @@ export function useRightsIdentity() {
 
 export function RightsIdentityMark() {
   const identity = useRightsIdentity();
-  if (!identity.ready) return <span className="identity-mark muted">identity…</span>;
+
+  if (!identity.ready) {
+    return <span className="identity-mark muted">Wallet…</span>;
+  }
+
   if (!identity.address) {
     return (
-      <button className="identity-mark" onClick={() => void identity.connect()}>
-        connect identity
+      <button
+        className="identity-mark"
+        type="button"
+        aria-label="Connect injected wallet"
+        title={identity.error || "Connect an injected EIP-1193 wallet"}
+        onClick={() => { void identity.connect().catch(() => undefined); }}
+      >
+        Connect wallet
       </button>
     );
   }
+
   return (
-    <button className="identity-mark" onClick={() => void identity.ensureNetwork()} title="Ensure Studionet 61999">
+    <button
+      className="identity-mark"
+      type="button"
+      aria-label="Connected wallet. Ensure GenLayer Studionet"
+      title={identity.error || "Connected · click to ensure Studionet 61999"}
+      onClick={() => { void identity.ensureNetwork().catch(() => undefined); }}
+    >
       <span className="identity-dot" /> {identity.address.slice(0, 6)}…{identity.address.slice(-4)}
     </button>
   );
