@@ -65,6 +65,61 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .identity-mark.muted { background: rgba(69,23,47,.07); color: var(--muted); box-shadow: none; border-color: var(--rule); }
 .identity-dot { background: var(--lime); box-shadow: 0 0 0 4px rgba(217,246,107,.13); }
 
+.identity-menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.identity-chevron {
+  margin-left: 8px;
+  color: var(--lime);
+  font-size: 10px;
+  line-height: 1;
+}
+.identity-dropdown {
+  position: absolute;
+  top: calc(100% + 9px);
+  right: 0;
+  z-index: 80;
+  width: 190px;
+  overflow: hidden;
+  padding: 6px;
+  border: 1px solid rgba(69,23,47,.12);
+  border-radius: 15px;
+  background: rgba(255,250,253,.98);
+  box-shadow: 0 20px 55px rgba(69,23,47,.18);
+  backdrop-filter: blur(18px);
+}
+.identity-menu-item {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--plum);
+  padding: 10px 11px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+}
+.identity-menu-item:hover {
+  background: rgba(240,63,145,.08);
+}
+.identity-menu-item.danger {
+  color: var(--danger);
+}
+.identity-menu-item.danger:hover {
+  background: rgba(200,62,89,.08);
+}
+.identity-menu-icon {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .primary-action {
   background: linear-gradient(135deg, var(--pink), var(--orange));
   color: white;
