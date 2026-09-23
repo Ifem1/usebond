@@ -34,7 +34,7 @@ class RightsRegistry(gl.Contract):
         canonical_source: str,
         rights_holder: str,
         terms_text: str,
-        rights_map_json: str,
+        rights_map_json: str | dict,
     ) -> str:
         self._require_key(licence_key, "licence key")
         if licence_key in self.licences:
@@ -53,10 +53,13 @@ class RightsRegistry(gl.Contract):
         if len(rights_map_json) > 6000:
             raise gl.vm.UserError("rights map is too large")
 
-        try:
-            rights_map = json.loads(rights_map_json)
-        except Exception:
-            raise gl.vm.UserError("rights map must be valid JSON")
+        if isinstance(rights_map_json, dict):
+            rights_map = rights_map_json
+        else:
+            try:
+                rights_map = json.loads(rights_map_json)
+            except Exception:
+                raise gl.vm.UserError("rights map must be valid JSON")
 
         if not isinstance(rights_map, dict) or len(rights_map) == 0:
             raise gl.vm.UserError("rights map must be a non-empty object")
@@ -75,7 +78,9 @@ class RightsRegistry(gl.Contract):
         record = dict(frozen_core)
         record["terms_digest"] = digest
         record["registrant"] = gl.message.sender_address.as_hex
-        record["registered_at"] = str(gl.message.datetime)
+        # The current Studionet MessageType has no datetime field. Registration
+        # finality is provided by the transaction receipt, so do not read an
+        # unsupported runtime attribute here.
         record["frozen"] = True
 
         self.licences[licence_key] = json.dumps(record, sort_keys=True)

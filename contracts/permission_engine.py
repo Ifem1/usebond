@@ -15,6 +15,23 @@ ALLOWED_OUTCOMES = (
 )
 
 
+def _normalise_assessment_value(raw: dict) -> dict:
+    if not isinstance(raw, dict):
+        return {"outcome": "INCONCLUSIVE", "summary": "Assessment output was not a JSON object.", "material_clauses": [], "conditions": []}
+    outcome = str(raw.get("outcome", "INCONCLUSIVE")).upper()
+    if outcome not in ALLOWED_OUTCOMES:
+        outcome = "INCONCLUSIVE"
+    conditions = [str(item).strip()[:420] for item in raw.get("conditions", [])[:8] if str(item).strip()] if isinstance(raw.get("conditions", []), list) else []
+    clauses = []
+    if isinstance(raw.get("material_clauses", []), list):
+        for item in raw["material_clauses"][:8]:
+            if isinstance(item, dict):
+                clauses.append({"clause": str(item.get("clause", ""))[:160], "effect": str(item.get("effect", ""))[:220], "reason": str(item.get("reason", ""))[:520]})
+    if outcome == "PERMITTED" and conditions:
+        outcome = "PERMITTED_WITH_CONDITIONS"
+    return {"outcome": outcome, "summary": str(raw.get("summary", ""))[:1400], "material_clauses": clauses, "conditions": conditions}
+
+
 class PermissionEngine(gl.Contract):
     registry_address: str
     permit_book_address: str
@@ -204,7 +221,6 @@ Rules:
         }
         record = dict(frozen_core)
         record["intent_digest"] = self._digest(frozen_core)
-        record["created_at"] = str(gl.message.datetime)
         record["status"] = "FROZEN"
         record["assessment_json"] = ""
         record["permit_key"] = ""
@@ -242,11 +258,11 @@ Rules:
         prompt = self._assessment_prompt(licence, intent)
 
         def leader_fn():
-            raw = gl.nondet.exec_prompt(prompt)
+            raw = gl.nondet.exec_prompt(prompt, response_format="json")
             try:
-                return self._normalise_assessment(json.loads(raw))
+                return _normalise_assessment_value(json.loads(raw))
             except Exception:
-                return self._normalise_assessment(raw)
+                return _normalise_assessment_value(raw)
 
         def validator_fn(leader_result) -> bool:
             if not isinstance(leader_result, glvm.Return):
@@ -255,15 +271,15 @@ Rules:
                 leader_payload = leader_result.calldata
                 if isinstance(leader_payload, str):
                     leader_payload = json.loads(leader_payload)
-                leader_assessment = self._normalise_assessment(leader_payload)
+                leader_assessment = _normalise_assessment_value(leader_payload)
             except Exception:
                 return False
 
-            own_raw = gl.nondet.exec_prompt(prompt)
+            own_raw = gl.nondet.exec_prompt(prompt, response_format="json")
             try:
-                own_assessment = self._normalise_assessment(json.loads(own_raw))
+                own_assessment = _normalise_assessment_value(json.loads(own_raw))
             except Exception:
-                own_assessment = self._normalise_assessment(own_raw)
+                own_assessment = _normalise_assessment_value(own_raw)
 
             # Both models independently interpret the frozen licence and intent.
             # Compare normalized material obligations/prohibitions and semantic
@@ -290,7 +306,6 @@ Rules:
 
         intent["assessment_json"] = json.dumps(assessment, sort_keys=True)
         intent["assessment_outcome"] = assessment["outcome"]
-        intent["assessed_at"] = str(gl.message.datetime)
         intent["evaluation_count"] = int(intent.get("evaluation_count", 0)) + 1
         intent["status"] = "ASSESSED"
 
