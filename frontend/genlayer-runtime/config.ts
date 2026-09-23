@@ -20,7 +20,7 @@ export function deploymentReady(): boolean {
 }
 
 export function explorerTx(hash: string): string {
-  return `${NETWORK.explorer.replace(/\/$/, "")}/transactions/${hash}`;
+  return `${NETWORK.explorer.replace(/\/$/, "")}/tx/${hash}`;
 }
 
 export function explorerAddress(address: string): string {
