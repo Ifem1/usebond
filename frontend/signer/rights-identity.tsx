@@ -1,13 +1,16 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { connectAccount, ensureStudionet, existingAccounts, provider } from "./injected-provider";
+
+const DISCONNECTED_KEY = "usebond:wallet-disconnected";
 
 export type RightsIdentity = {
   address: string | null;
   ready: boolean;
   error: string;
   connect: () => Promise<string>;
+  disconnect: () => void;
   ensureNetwork: () => Promise<void>;
 };
 
@@ -20,12 +23,19 @@ export function RightsIdentityScope({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     let mounted = true;
-    existingAccounts()
-      .then((accounts) => mounted && setAddress(accounts[0] || null))
-      .finally(() => mounted && setReady(true));
+    const manuallyDisconnected = window.sessionStorage.getItem(DISCONNECTED_KEY) === "1";
+
+    if (manuallyDisconnected) {
+      setReady(true);
+    } else {
+      existingAccounts()
+        .then((accounts) => mounted && setAddress(accounts[0] || null))
+        .finally(() => mounted && setReady(true));
+    }
 
     const p = provider();
     const accountHandler = (accounts: string[]) => {
+      if (window.sessionStorage.getItem(DISCONNECTED_KEY) === "1") return;
       setAddress(accounts?.[0] || null);
       setError("");
     };
@@ -40,12 +50,19 @@ export function RightsIdentityScope({ children }: { children: React.ReactNode })
     setError("");
     try {
       const value = await connectAccount();
+      window.sessionStorage.removeItem(DISCONNECTED_KEY);
       setAddress(value);
       return value;
     } catch (e: any) {
       setError(e?.message || "Wallet connection failed.");
       throw e;
     }
+  }, []);
+
+  const disconnect = useCallback(() => {
+    window.sessionStorage.setItem(DISCONNECTED_KEY, "1");
+    setAddress(null);
+    setError("");
   }, []);
 
   const ensureNetwork = useCallback(async () => {
@@ -58,7 +75,10 @@ export function RightsIdentityScope({ children }: { children: React.ReactNode })
     }
   }, []);
 
-  const value = useMemo(() => ({ address, ready, error, connect, ensureNetwork }), [address, ready, error, connect, ensureNetwork]);
+  const value = useMemo(
+    () => ({ address, ready, error, connect, disconnect, ensureNetwork }),
+    [address, ready, error, connect, disconnect, ensureNetwork],
+  );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
@@ -70,6 +90,47 @@ export function useRightsIdentity() {
 
 export function RightsIdentityMark() {
   const identity = useRightsIdentity();
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
+  async function copyAddress() {
+    if (!identity.address) return;
+    try {
+      await navigator.clipboard.writeText(identity.address);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1400);
+    } catch {
+      const input = document.createElement("textarea");
+      input.value = identity.address;
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1400);
+    }
+  }
 
   if (!identity.ready) {
     return <span className="identity-mark muted">Wallet…</span>;
@@ -81,7 +142,7 @@ export function RightsIdentityMark() {
         className="identity-mark"
         type="button"
         aria-label="Connect injected wallet"
-        title={identity.error || "Connect an injected EIP-1193 wallet"}
+        title={identity.error || "Connect wallet"}
         onClick={() => { void identity.connect().catch(() => undefined); }}
       >
         Connect wallet
@@ -90,14 +151,44 @@ export function RightsIdentityMark() {
   }
 
   return (
-    <button
-      className="identity-mark"
-      type="button"
-      aria-label="Connected wallet. Ensure GenLayer Studionet"
-      title={identity.error || "Connected · click to ensure Studionet 61999"}
-      onClick={() => { void identity.ensureNetwork().catch(() => undefined); }}
-    >
-      <span className="identity-dot" /> {identity.address.slice(0, 6)}…{identity.address.slice(-4)}
-    </button>
+    <div className="identity-menu-wrap" ref={menuRef}>
+      <button
+        className="identity-mark"
+        type="button"
+        aria-label="Open wallet menu"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span className="identity-dot" /> {identity.address.slice(0, 6)}…{identity.address.slice(-4)}
+        <span className="identity-chevron" aria-hidden="true">{open ? "↑" : "↓"}</span>
+      </button>
+
+      {open && (
+        <div className="identity-dropdown" role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            className="identity-menu-item"
+            onClick={() => { void copyAddress(); }}
+          >
+            <span>{copied ? "Copied!" : "Copy wallet"}</span>
+            <span className="identity-menu-icon" aria-hidden="true">{copied ? "✓" : "⧉"}</span>
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="identity-menu-item danger"
+            onClick={() => {
+              identity.disconnect();
+              setOpen(false);
+            }}
+          >
+            <span>Disconnect</span>
+            <span className="identity-menu-icon" aria-hidden="true">↗</span>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
