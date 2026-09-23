@@ -17,7 +17,9 @@ async function write(
 ): Promise<string> {
   assertReady(account);
   const client = signedClient(account);
-  const estimate = await client.estimateTransactionFeesForWrite({
+  // genlayer-js 1.1.x exposes this runtime helper but its public client
+  // type omits it; keep the cast narrow at the SDK compatibility boundary.
+  const estimate = await (client as any).estimateTransactionFeesForWrite({
     account: account as `0x${string}`,
     address: address as `0x${string}`,
     functionName,
