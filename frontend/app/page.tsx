@@ -120,10 +120,6 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="console-note">
-              <strong>Injected wallet only.</strong>
-              <span>No wallet selector, no custodial account and no hidden server signer.</span>
-            </div>
           </div>
         </section>
 
