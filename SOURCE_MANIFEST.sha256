@@ -14,7 +14,7 @@ a9c9719db2df385eca10767b45801d8cf56b386207f7ba11ae33c6978fbb792f  ./DEPLOYMENT_R
 8a2b9440b502a6193073cc34d3804aa1877512266f15f7883a65386409ab2f0f  ./FINAL_HANDOFF_STATUS.md
 74885790945211b4e2b94a806ce10141328a59be2b3625a94545f62434941ce4  ./frontend/app/globals.css
 e46ca57efdfc01f510a69a5f976f0fdf1f35cf4b64ea220469dbd05a222755e6  ./frontend/app/intent/[intentKey]/page.tsx
-9300688a22e2d134886f83bf07a60046d00734c3a1ab35a1de6895be4794c84c  ./frontend/app/landing.css
+b74adf23c4c1a50cc19c51e6c63e64e08c30076af8e94fb3692712d54a2fbfef  ./frontend/app/landing.css
 47a3006b52287ad78b57aba608a89cca71ead0063b31b266a30833e562b3087d  ./frontend/app/layout.tsx
 9c0d174fd020d9618db8262fd3c7320bf87e62177f79a6e0ee4913c00925bb74  ./frontend/app/page.tsx
 ab5a2e31706e537df7587ecb1d5fbada0a391a1c2c977adf3c3137317ef1431c  ./frontend/app/permit/[permitKey]/page.tsx
@@ -36,7 +36,7 @@ ac41cff0e823ffd33104820852364f1cac43882d6665bdfae1a4ca4eef9a2b5e  ./frontend/rig
 fc8f1e2d5a99158c5aae74cb355a730bcc8819f00df1edda5f300f5cc4177855  ./frontend/rights-desk/catalogue/RightsLookup.tsx
 cf40a4b9f191d2af7fcd3bfd750a70d3a480d5e00c682f6c4eac9d9fa4701a4c  ./frontend/rights-desk/publishing/PublishTermsComposer.tsx
 4cc298390d142922c03811787fc8326ed76db2d1ba921b5eaac0ac6b46ea2fb0  ./frontend/signer/injected-provider.ts
-807b187502e151d245d4997eeed163a06e3b558a7f609aa8091e365d5bb6d600  ./frontend/signer/rights-identity.tsx
+b4dfe12fc59f45dfa4304dfca84f6f3159e89ce6bb9381738abb88a3b3a88432  ./frontend/signer/rights-identity.tsx
 78b65cef6c47926a5f91ab33c3d2220ced34aae0132936c12727ea85c8b2fca7  ./frontend/term-sheet/LicenceFolio.tsx
 104fbd18432406714408395ec11b2fbb3c716da1fce21e5abd7d74e80720838f  ./frontend/tsconfig.json
 6384cdf038c0cdfcb70a2455b30fef010cd7c658230f6513ffa183e7285a316a  ./frontend/use-composer/UseComposer.tsx
