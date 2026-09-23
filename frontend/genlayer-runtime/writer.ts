@@ -1,0 +1,86 @@
+"use client";
+
+import { ADDRESSES, deploymentReady } from "./config";
+import { signedClient } from "./client";
+import type { IntentFacts } from "./models";
+
+function assertReady(account: string) {
+  if (!deploymentReady()) throw new Error("Deployment configuration is incomplete.");
+  if (!/^0x[0-9a-fA-F]{40}$/.test(account)) throw new Error("A wallet identity is required.");
+}
+
+async function write(
+  account: string,
+  address: string,
+  functionName: string,
+  args: unknown[],
+): Promise<string> {
+  assertReady(account);
+  const client = signedClient(account);
+  const estimate = await client.estimateTransactionFeesForWrite({
+    account: account as `0x${string}`,
+    address: address as `0x${string}`,
+    functionName,
+    args,
+    value: 0n,
+  } as any);
+  const hash = await client.writeContract({
+    account: account as `0x${string}`,
+    address: address as `0x${string}`,
+    functionName,
+    args,
+    value: 0n,
+    fees: {
+      distribution: estimate.distribution,
+      feeValue: estimate.feeValue,
+    },
+  } as any);
+  return String(hash);
+}
+
+export async function registerLicence(
+  account: string,
+  input: {
+    key: string;
+    title: string;
+    assetType: string;
+    canonicalSource: string;
+    rightsHolder: string;
+    termsText: string;
+    rightsMap: Record<string, string>;
+  },
+) {
+  return write(account, ADDRESSES.registry, "register_licence", [
+    input.key,
+    input.title,
+    input.assetType,
+    input.canonicalSource,
+    input.rightsHolder,
+    input.termsText,
+    JSON.stringify(input.rightsMap),
+  ]);
+}
+
+export async function createIntent(
+  account: string,
+  intentKey: string,
+  licenceKey: string,
+  facts: IntentFacts,
+) {
+  return write(account, ADDRESSES.engine, "create_intent", [
+    intentKey,
+    licenceKey,
+    facts.action,
+    facts.purpose,
+    facts.distribution,
+    facts.territory,
+    facts.attribution,
+    facts.source_redistribution,
+    facts.third_party_access,
+    facts.extra_facts,
+  ]);
+}
+
+export async function evaluateIntent(account: string, intentKey: string) {
+  return write(account, ADDRESSES.engine, "evaluate_intent", [intentKey]);
+}

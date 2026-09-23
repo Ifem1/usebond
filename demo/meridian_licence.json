@@ -1,0 +1,15 @@
+{
+  "licence_key": "UBL-MERIDIAN-01",
+  "title": "Meridian Climate Data",
+  "asset_type": "dataset",
+  "canonical_source": "https://example.org/meridian-climate-data",
+  "rights_holder": "Meridian Institute",
+  "terms_text": "You may analyse the Meridian Climate Data and use it within commercial and non-commercial products if Meridian Institute is clearly attributed. Training machine-learning systems is permitted only where the source records are not exposed to end users or third parties. Generated summaries, predictions and model outputs may be distributed publicly. You must not redistribute the source dataset, provide third parties with direct access to source records, or publish outputs that reproduce substantial source records. Any public product or publication must include the attribution: Data source: Meridian Institute. If a proposed use requires source redistribution or third-party source access, that use is not permitted under this licence.",
+  "rights_map": {
+    "commercial_use": "conditional",
+    "model_training": "conditional",
+    "derivative_works": "permitted",
+    "redistribution": "denied",
+    "attribution": "required"
+  }
+}

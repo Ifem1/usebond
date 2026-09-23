@@ -1,0 +1,19 @@
+{
+  "name": "usebond",
+  "private": true,
+  "type": "module",
+  "workspaces": ["frontend"],
+  "scripts": {
+    "dev": "npm --workspace frontend run dev",
+    "build": "npm --workspace frontend run build",
+    "typecheck": "npm --workspace frontend run typecheck",
+    "test:unit": "pytest tests/unit -q",
+    "test:direct": "pytest tests/direct -v",
+    "test": "pytest tests/unit -q",
+    "deploy": "genlayer deploy"
+  },
+  "devDependencies": {
+    "genlayer-js": "^1.1.8",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "network": "studionet",
+  "chainId": 61999,
+  "rpc": "https://studio.genlayer.com/api",
+  "contracts": {
+    "registry": "0x0a9574917194D7F8a7665cc75103c325706616e6",
+    "permissionEngine": "0x84ccd66DA46A1Bd64B3226B1f99AfFb51866Ae85",
+    "permitBook": "0x7FC7824396D6bD107eB9041BfDed44e138D92a21"
+  },
+  "deploymentTransactions": {
+    "registry": "0x8051594c6ab9443ea38b6b377565bc64ecc7d48ed30f3bb41ddf1e45e7595637",
+    "permitBook": "0x7930c99c30f8ba4a264a88e23e6dd50bae900334c54502c71e688ee7699cfa55",
+    "permissionEngine": "0xdfcf658e6ea1aa00f9da6ace42197a819e90ebe839cd016b3ac23a80c0ad000a",
+    "bindEngine": "0x30fd662dfd5fbfb584d8f787b7543905e25548f1fe27bb5eed8e92ded0c92cb1"
+  },
+  "finality": "FINALIZED"
+}

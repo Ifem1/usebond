@@ -1,0 +1,30 @@
+[
+  {
+    "name": "conditional permission",
+    "facts": {
+      "action": "train a model",
+      "purpose": "a commercial product",
+      "distribution": "outputs distributed publicly",
+      "territory": "worldwide",
+      "attribution": "attribution will be displayed",
+      "source_redistribution": false,
+      "third_party_access": false,
+      "extra_facts": "Outputs are aggregate forecasts and do not reproduce source records."
+    },
+    "expected_semantic_direction": "PERMITTED or PERMITTED_WITH_CONDITIONS, with attribution and source non-redistribution made material"
+  },
+  {
+    "name": "explicitly denied source redistribution",
+    "facts": {
+      "action": "redistribute copies",
+      "purpose": "client work",
+      "distribution": "outputs shared with clients",
+      "territory": "worldwide",
+      "attribution": "attribution will be displayed",
+      "source_redistribution": true,
+      "third_party_access": true,
+      "extra_facts": "Clients will receive the underlying row-level dataset."
+    },
+    "expected_semantic_direction": "DENIED"
+  }
+]
