@@ -341,20 +341,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .node-yellow { background: #fff1b8; color: #7d5c00; }
 .node-orange { background: #ffe0cb; color: #9b4517; }
 .node-lime { background: var(--olive-soft); color: #536700; }
-.console-note {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: 3px;
-  margin-top: 22px;
-  padding: 14px 15px;
-  border-radius: 14px;
-  background: var(--plum);
-  color: white;
-}
-.console-note strong { color: var(--lime); font-size: 11px; }
-.console-note span { color: #e8d5df; font-size: 11px; }
-
 .signal-strip {
   display: grid;
   grid-template-columns: .75fr 1.15fr 1.3fr;
