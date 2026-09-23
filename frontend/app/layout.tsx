@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./landing.css";
 import { RightsIdentityScope } from "@/signer/rights-identity";
 
 export const metadata: Metadata = {
-  title: "USEBOND",
-  description: "Consensus-backed permission decisions for frozen licence terms and exact intended uses.",
+  title: "USEBOND · Rights clearing for exact intended uses",
+  description: "Consensus-backed permission decisions for frozen licence terms and exact intended uses on GenLayer.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
