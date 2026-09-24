@@ -25,8 +25,17 @@ export function PermitPassport({ permitKey }: { permitKey: string }) {
         setPermit(value);
         if (value) setLicence(await readLicence(value.licence_key));
 
+        // A finalized callback can be reflected in the parent evaluation's
+        // finalized state without a separately discoverable child tx on
+        // Studionet. Accept the linked parent only for a canonical finalized-only record.
+        const recordIsCanonical = Boolean(
+          value?.finalized_only &&
+          value.issuer.toLowerCase() === ADDRESSES.engine.toLowerCase() &&
+          (value.outcome === "PERMITTED" || value.outcome === "PERMITTED_WITH_CONDITIONS")
+        );
+
         const hinted = query.get("tx") || "";
-        if (/^0x[0-9a-fA-F]{64}$/.test(hinted)) {
+        if (recordIsCanonical && /^0x[0-9a-fA-F]{64}$/.test(hinted)) {
           const observation = await inspectTransaction(hinted);
           if (observation.stage === "FINALIZED") {
             setIssuanceTx(hinted);
@@ -35,7 +44,7 @@ export function PermitPassport({ permitKey }: { permitKey: string }) {
           }
         }
 
-        const discovered = await findFinalizedPermitTransaction(permitKey);
+        const discovered = recordIsCanonical ? await findFinalizedPermitTransaction(permitKey) : null;
         if (discovered) {
           setIssuanceTx(discovered);
           setVerified(true);
@@ -57,7 +66,7 @@ export function PermitPassport({ permitKey }: { permitKey: string }) {
         {!loading && deploymentReady() && !permit && <div className="empty-ledger">No permission credential exists under this key.</div>}
         {permit && !verified && (
           <div className="setup-memo">
-            <strong>Permit record found, issuance finality not verified.</strong> USEBOND will not present this record as a final permission passport until the permit issuance transaction is independently observed as `FINALIZED`.
+            <strong>Permit record found, finality not verified.</strong> USEBOND will not present this record as a final permission passport until its finalized evaluation is independently observed.
           </div>
         )}
 
@@ -96,7 +105,7 @@ export function PermitPassport({ permitKey }: { permitKey: string }) {
               <div className="tx-ribbon">
                 <strong>FINALIZED</strong>
                 <code>{issuanceTx.slice(0, 18)}…</code>
-                <a href={explorerTx(issuanceTx)} target="_blank" rel="noreferrer">issuance transaction ↗</a>
+                <a href={explorerTx(issuanceTx)} target="_blank" rel="noreferrer">finalized evaluation / issuance ↗</a>
                 <a href={explorerAddress(ADDRESSES.permitBook)} target="_blank" rel="noreferrer">permit book ↗</a>
               </div>
             </div>

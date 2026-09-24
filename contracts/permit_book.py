@@ -82,7 +82,6 @@ class PermitBook(gl.Contract):
             "material_clauses": decision.get("material_clauses", [])[:8],
             "terms_digest": str(decision.get("terms_digest", "")),
             "intent_digest": str(decision.get("intent_digest", "")),
-            "issued_at": str(gl.message.datetime),
             "issuer": self.engine_address,
             "finalized_only": True,
         }

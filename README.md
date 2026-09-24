@@ -92,14 +92,20 @@ The canonical deployment is finalized on Studionet 61999. No private key is stor
 
 See `DEPLOYMENT_RUNBOOK.md` and `MEGA_PROMPT_FOR_AGENT.md`.
 
-### Final Studionet deployment
+### Corrected Studionet deployment
 
 The finalized deployment manifest is `deployment-manifest.generated.json`.
 
-- RightsRegistry: `0x0a9574917194D7F8a7665cc75103c325706616e6`
-- PermissionEngine: `0x84ccd66DA46A1Bd64B3226B1f99AfFb51866Ae85`
-- PermitBook: `0x7FC7824396D6bD107eB9041BfDed44e138D92a21`
-- Engine binding: `0x30fd662dfd5fbfb584d8f787b7543905e25548f1fe27bb5eed8e92ded0c92cb1`
+- RightsRegistry: `0x8D266231904d5eA14BEe00298A09BeC971572B2A`
+- PermissionEngine: `0x88C1b897759E57dD3f24c42ed26248FaE6F610A7`
+- PermitBook: `0xA7Ca373c4eb0A9da8770B310C60C1e3CE61F9676`
+- Deployment transactions: registry `0xf55ece2d712186155d8c6ee853992a1032ece3ba3146ad392d5db9d24328af21`, permit book `0x57e309bc5f5b7805614f608af40fbdb1d313fe0543f625c8842518d49b862c15`, permission engine `0x3c85db1b81f24874ea21f65736047d6a71f24330bd8c34294203c05661b10429`.
+
+All three deployments finalized. The new PermitBook is bound to the new PermissionEngine; successful finalized issuance records the new engine as issuer. The exact binding transaction hash was not retained, so it is not represented as a known hash in the manifest. Previous addresses above were superseded; see the manifest for historical context.
+
+The real Studionet lifecycle is recorded in `deployment-manifest.generated.json`. A conditional permission, DENIED, INCONCLUSIVE, and foreign-evaluator attempt were exercised. Studionet exposed no separate child transaction ID for the finalized permit callback; the UI now requires a finalized evaluation plus a matching `finalized_only` PermitBook record from the canonical engine before rendering the passport.
+
+For Vercel, copy the six public values from `.env.generated` and redeploy the frontend yourself. No private keys belong in Vercel or this repository.
 
 All four transactions were verified `FINALIZED` on Studionet 61999. The public frontend environment is recorded in `.env.generated`; copy those `NEXT_PUBLIC_*` values into the Vercel project before deploying the frontend.
 

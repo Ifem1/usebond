@@ -8,7 +8,7 @@ import { parseJson } from "@/genlayer-runtime/models";
 import { readIntent, readLicence, readPermit } from "@/genlayer-runtime/reader";
 import { evaluateIntent } from "@/genlayer-runtime/writer";
 import { finalizeTransaction, inspectTransaction, observeTransaction, triggeredTransactions, type TxObservation } from "@/genlayer-runtime/tx-observer";
-import { deploymentReady, explorerTx } from "@/genlayer-runtime/config";
+import { ADDRESSES, deploymentReady, explorerTx } from "@/genlayer-runtime/config";
 import { RightsIdentityMark, useRightsIdentity } from "@/signer/rights-identity";
 
 function outcomeClass(outcome?: string) {
@@ -107,6 +107,25 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
             }
           }
           await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
+        // Some Studionet finalized callbacks are reflected in state without a
+        // separately discoverable child transaction. Require both the
+        // finalized parent and a matching finalized-only permit record.
+        const current = await readIntent(intentKey);
+        if (current?.permit_key && current.assessment_outcome?.startsWith("PERMITTED")) {
+          const issued = await readPermit(current.permit_key);
+          if (
+            issued?.finalized_only &&
+            issued.intent_key === current.intent_key &&
+            issued.licence_key === current.licence_key &&
+            issued.holder.toLowerCase() === current.holder.toLowerCase() &&
+            issued.terms_digest === current.terms_digest &&
+            issued.intent_digest === current.intent_digest &&
+            issued.issuer.toLowerCase() === ADDRESSES.engine.toLowerCase()
+          ) {
+            setPermit(issued);
+            setPermitTx(activeHash);
+          }
         }
       }
     } catch (e: any) {

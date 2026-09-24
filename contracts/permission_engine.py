@@ -286,11 +286,40 @@ Rules:
             # fields deterministically so the
             # validator does not introduce a third nondeterministic failure point.
             # Missing a material condition is a substantive disagreement.
-            return (
+            exact_match = (
                 leader_assessment.get("outcome") == own_assessment.get("outcome")
                 and leader_assessment.get("conditions") == own_assessment.get("conditions")
                 and leader_assessment.get("material_clauses") == own_assessment.get("material_clauses")
             )
+            if exact_match:
+                return True
+
+            equivalence_prompt = f"""
+You are a strict semantic-equivalence validator. Two independent assessments below
+were produced after separately evaluating the same frozen licence and exact intent.
+Decide whether they express the same outcome and materially equivalent obligations,
+conditions, prohibitions, and supporting licence clauses. Ignore differences in
+wording, summary, and harmless clause labels. Return equivalent=false if outcomes
+differ, one adds or omits a material condition/prohibition, or the supporting meaning
+conflicts. Do not prefer either assessment merely because it is the leader's.
+
+Frozen licence:
+{licence.get('terms_text', '')}
+Rights map: {json.dumps(licence.get('rights_map', {}), sort_keys=True)}
+Frozen intent: {intent.get('intent_statement', '')}
+
+Assessment A: {json.dumps(leader_assessment, sort_keys=True)}
+Assessment B: {json.dumps(own_assessment, sort_keys=True)}
+
+Return only JSON: {{"equivalent": true}} or {{"equivalent": false}}.
+"""
+            try:
+                comparison = gl.nondet.exec_prompt(equivalence_prompt, response_format="json")
+                if isinstance(comparison, dict):
+                    return comparison.get("equivalent") is True
+            except Exception:
+                return False
+            return False
 
         # Keep the nondeterministic block explicit for the GenVM safety
         # analyser; the leader and validator both remain substantive.

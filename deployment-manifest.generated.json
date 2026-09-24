@@ -3,15 +3,33 @@
   "chainId": 61999,
   "rpc": "https://studio.genlayer.com/api",
   "contracts": {
-    "registry": "0x0a9574917194D7F8a7665cc75103c325706616e6",
-    "permissionEngine": "0x84ccd66DA46A1Bd64B3226B1f99AfFb51866Ae85",
-    "permitBook": "0x7FC7824396D6bD107eB9041BfDed44e138D92a21"
+    "registry": "0x8D266231904d5eA14BEe00298A09BeC971572B2A",
+    "permissionEngine": "0x88C1b897759E57dD3f24c42ed26248FaE6F610A7",
+    "permitBook": "0xA7Ca373c4eb0A9da8770B310c60C1e3CE61F9676"
   },
   "deploymentTransactions": {
-    "registry": "0x8051594c6ab9443ea38b6b377565bc64ecc7d48ed30f3bb41ddf1e45e7595637",
-    "permitBook": "0x7930c99c30f8ba4a264a88e23e6dd50bae900334c54502c71e688ee7699cfa55",
-    "permissionEngine": "0xdfcf658e6ea1aa00f9da6ace42197a819e90ebe839cd016b3ac23a80c0ad000a",
-    "bindEngine": "0x30fd662dfd5fbfb584d8f787b7543905e25548f1fe27bb5eed8e92ded0c92cb1"
+    "registry": "0xf55ece2d712186155d8c6ee853992a1032ece3ba3146ad392d5db9d24328af21",
+    "permitBook": "0x57e309bc5f5b7805614f608af40fbdb1d313fe0543f625c8842518d49b862c15",
+    "permissionEngine": "0x3c85db1b81f24874ea21f65736047d6a71f24330bd8c34294203c05661b10429"
   },
-  "finality": "FINALIZED"
+  "finality": "FINALIZED",
+  "engineBinding": {
+    "status": "verified by finalized live permit record",
+    "issuer": "0x88C1b897759E57dD3f24c42ed26248FaE6F610A7",
+    "transaction": null,
+    "note": "The matching PermitBook record and successful live issuance prove the one-time binding. Exact binding transaction hash was not retained in the available CLI output."
+  },
+  "liveEvidence": {
+    "licenceRegistration": "0x7f897a46e1932fbd9e00e2adc159bab27a7167c1d1a69e0b2f055dec56d2338a",
+    "conditionalIntentCreation": "0x02d549299ebf884950d03b42412a6cf8cfc9404cb45a43da8cc54b0aa09d6e79",
+    "conditionalEvaluation": "0xc4c7d19dc9f6f1527adcdb7bcee121375324c38232d4f0c5a2f3dda9f086ed60",
+    "conditionalOutcome": "PERMITTED_WITH_CONDITIONS",
+    "permitKey": "UBP-UBI-COMPARE-TEST-01",
+    "deniedIntentCreation": "0xdfe4040b792bf5059de9e8bd09176ad80012833d037f8833b3d9aff74762a23a",
+    "deniedEvaluation": "0x4e3d908fc79a4a9d105fe0b7f8db590f3b8f21635548405ba7aceee4a8ee3af6",
+    "inconclusiveIntentCreation": "0xf06d0e970bbe572de9d643ef7e727f1b74dfbac737bbd3d7bacf8b7549da5b97",
+    "inconclusiveEvaluation": "0x939019adc7937f6f631737e30af6cd04480c39345941f2f864cb7b9dfe1c7b1c",
+    "unauthorizedEvaluationAttempt": "0xe971c2a37217fc3a01dfc9e78e6b3f519afacdb94243bc4cc1c5f9578c726780",
+    "permitChildTransactionExposed": false
+  }
 }
