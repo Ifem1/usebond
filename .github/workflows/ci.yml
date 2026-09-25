@@ -100,8 +100,6 @@ jobs:
             try {
               const tx = await client.getTransaction({ hash: contract.deployment });
               const status = String(tx?.statusName ?? tx?.status ?? "").toUpperCase();
-              const decoded = tx?.txDataDecoded;
-              const deployedSource = decoded?.type === "deploy" ? decoded?.code : undefined;
 
               console.log(`${contract.name} address=${contract.address}`);
               console.log(`  deployment=${contract.deployment}`);
@@ -111,19 +109,43 @@ jobs:
                 throw new Error(`deployment transaction is not FINALIZED (status=${status})`);
               }
 
-              if (typeof deployedSource !== "string" || deployedSource.length === 0) {
+              let deployedBytes;
+              let provenanceMethod = "";
+              try {
+                const codeB64 = await client.request({
+                  method: "gen_getContractCode",
+                  params: [contract.address],
+                });
+                if (typeof codeB64 === "string" && codeB64.length > 0) {
+                  deployedBytes = Buffer.from(codeB64, "base64");
+                  provenanceMethod = "gen_getContractCode legacy address parameter";
+                }
+              } catch (rpcError) {
+                console.log(`  legacy_code_rpc_error=${String(rpcError)}`);
+              }
+
+              if (!deployedBytes) {
+                const decoded = tx?.txDataDecoded;
+                const deployedSource = decoded?.type === "deploy" ? decoded?.code : undefined;
+                if (typeof deployedSource === "string" && deployedSource.length > 0) {
+                  deployedBytes = Buffer.from(deployedSource, "utf8");
+                  provenanceMethod = "finalized deployment transaction decoded code";
+                }
+              }
+
+              if (!deployedBytes) {
                 unavailable.push(contract.name);
-                console.log("  deployed_source=unavailable (deployment transaction did not expose decoded code)");
-                console.log(`::warning::${contract.name}: deployment transaction did not expose decoded source code`);
+                console.log("  deployed_source=unavailable (RPC and finalized deployment transaction exposed no source bytes)");
+                console.log(`::warning::${contract.name}: exact deployed-source bytes unavailable from current Studionet interfaces`);
                 continue;
               }
 
               const repositorySource = readFileSync(contract.path);
-              const deployedBytes = Buffer.from(deployedSource, "utf8");
               const deployedSha = sha256(deployedBytes);
               const repositorySha = sha256(repositorySource);
               const exactMatch = deployedBytes.equals(repositorySource);
 
+              console.log(`  provenance_method=${provenanceMethod}`);
               console.log(`  deployed_bytes=${deployedBytes.length} deployed_sha256=${deployedSha}`);
               console.log(`  repository_bytes=${repositorySource.length} repository_sha256=${repositorySha}`);
               console.log(`  exact_byte_match=${exactMatch}`);
