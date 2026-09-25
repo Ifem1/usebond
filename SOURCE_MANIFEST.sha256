@@ -32,10 +32,11 @@ c7745185ad53d4da8675b65c444c3fef58fe64194fdd7e7b5e3d46f65bbdbcaf  ./frontend/dem
 d752dafb755cd313b51493ebadeada088b8d5efb48a60bb50088ecd775d3e1bc  ./frontend/genlayer-runtime/client.ts
 43b1d7eea1dcbf5647c944eb80ee4cfbf239d7c6179dfd7c50c12760061ff250  ./frontend/genlayer-runtime/config.ts
 5ace1cbca0a8f5090410060b87164c7a458c40d2a7d4c33b57460735041ada3c  ./frontend/genlayer-runtime/execution-outcome.ts
+7ba744f4d9d8c171fd4334d8fb17f57bcb766378416bdfd566eda9279d5379a5  ./frontend/genlayer-runtime/intent-payload.ts
 dde48783c836fcbcc1373457e9b665a76a2ac65a851e30ef3bac3825a4b168e0  ./frontend/genlayer-runtime/models.ts
 4c0cb0bc24be8451768ded6980a73b272b7c86f390a7303f8599542dc3def200  ./frontend/genlayer-runtime/reader.ts
 01e862acb76b9c5b0c12e7db7f629c5d615588b2db2dc32f0f2f1bb00407f639  ./frontend/genlayer-runtime/tx-observer.ts
-31b04eab04e1ab3da29b73507cd3687582ca5f5544d810057d74dedfeb604364  ./frontend/genlayer-runtime/writer.ts
+17d92dc69063a82d08d292c451a7095647ebc31d68823a5daa17fc3df659c874  ./frontend/genlayer-runtime/writer.ts
 1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b  ./frontend/next-env.d.ts
 c5efcdb15ee66db5a3a749082d8a2d68abdd0555ce251baee0e3fd920b4c55b5  ./frontend/next.config.ts
 c919b328c803b899c5572fc490ff6bb474a68336a8982a3b9dd146ddf29bb21a  ./frontend/package.json

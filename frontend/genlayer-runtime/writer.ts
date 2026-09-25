@@ -3,6 +3,7 @@
 import { ADDRESSES, deploymentReady } from "./config";
 import { signedClient } from "./client";
 import type { IntentFacts } from "./models";
+import { createIntentArguments } from "./intent-payload";
 
 function assertReady(account: string) {
   if (!deploymentReady()) throw new Error("Deployment configuration is incomplete.");
@@ -18,7 +19,6 @@ async function write(
   assertReady(account);
   const client = signedClient(account);
   const hash = await client.writeContract({
-    account: account as `0x${string}`,
     address: address as `0x${string}`,
     functionName,
     args,
@@ -56,18 +56,7 @@ export async function createIntent(
   licenceKey: string,
   facts: IntentFacts,
 ) {
-  return write(account, ADDRESSES.engine, "create_intent", [
-    intentKey,
-    licenceKey,
-    facts.action,
-    facts.purpose,
-    facts.distribution,
-    facts.territory,
-    facts.attribution,
-    facts.source_redistribution,
-    facts.third_party_access,
-    facts.extra_facts,
-  ]);
+  return write(account, ADDRESSES.engine, "create_intent", createIntentArguments(intentKey, licenceKey, facts));
 }
 
 export async function evaluateIntent(account: string, intentKey: string) {
