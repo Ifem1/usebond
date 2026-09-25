@@ -116,11 +116,13 @@ All three deployments finalized. The PermitBook binding transaction is `0x8cd59a
 
 The real Studionet lifecycle is recorded in `deployment-manifest.generated.json`. The successful conditional evaluation `0x9a3ae1280855be88d25c9480f02749430d92c0c45fbf71f93155ee33028d6141` triggered permit child `0xf66546b3631cf3e27afd835da5bc98845d2de2fee2cedae2ff63e510bb9e845f`; both finalized and executed successfully. DENIED and INCONCLUSIVE evaluations finalized without permits, and a foreign evaluator was rejected. The child was recovered through Studionet's transaction index (`triggered_by` / `triggered_on=finalized`), although the SDK's `getTriggeredTransactionIds` returned an empty list.
 
-Production frontend: [https://usebond-frontend.vercel.app/](https://usebond-frontend.vercel.app/). GitHub reports Vercel deployment success for the frontend-fix commit `6d975e2`; the latest `main` commit contains documentation/evidence corrections only. The production bundle was checked for all three canonical Studionet addresses and the current publisher validation. All five public routes returned HTTP 200. `.env.generated` records the public deployment values; no private key belongs in Vercel or this repository.
+Production frontend: [https://usebond-frontend.vercel.app/](https://usebond-frontend.vercel.app/). The production site is verified on `main` commit `1260da4`; the hosted Permission Lens now detects the finalized permit child and links to a working public Passport. The production bundle contains all three canonical Studionet addresses, and all five public routes returned HTTP 200. `.env.generated` records the public deployment values; no private key belongs in Vercel or this repository.
 
 The live contract lifecycle, including finalized parent and permit-child transactions, is fully evidenced in `deployment-manifest.generated.json`. A wallet-connected write/evaluation initiated from the hosted frontend has not been re-run after the latest deployment; do not treat the HTTP and asset checks as proof of that separate UI flow.
 
 The Permission Lens and public Passport also have a strict recovery path for the current Studionet explorer/RPC read failure on the PermitBook address. If a PermitBook view call fails, the frontend verifies the finalized successful `issue_permit` child transaction from the canonical engine to the canonical PermitBook, then matches its key, holder, outcome, and both digests against the stored intent before presenting the passport. It never treats an accepted parent or an unverified transaction as issuance.
+
+The production UI was verified with intent `UBI-B0873E620B54`: Permission Lens shows the finalized permit as issued and links to the passport, which displays `PERMITTED WITH CONDITIONS` and its recorded conditions. The parent and child hashes are recorded in `FINAL_HANDOFF_STATUS.md`.
 
 ## Submission principle
 

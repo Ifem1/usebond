@@ -23,7 +23,7 @@
 - [x] Permit passport recovers finalized issuance from canonical successful `issue_permit` calldata when the Studionet PermitBook view endpoint is unavailable; executable recovery tests pass 5/5.
 - [x] Frontend typecheck and Next production build passed; results recorded in validation report.
 - [x] Registry and licence folio handle boolean and other JSON rights-map values without calling string methods on non-strings.
-- [x] Vercel deployment completed for frontend commit `6d975e2`; all five production routes return HTTP 200 and the public bundle contains the canonical contract addresses and current publisher validation.
+- [x] Vercel deployment verified through commit `1260da4`; all five production routes return HTTP 200, the Permission Lens recognizes finalized issuance, and the public Passport renders the matching finalized transaction and conditions.
 - [ ] Re-run a wallet-connected write/evaluation through the hosted frontend and verify the resulting UI states. Existing on-chain lifecycle proof does not substitute for this UI integration check.
 
 ## Frontend and handoff
