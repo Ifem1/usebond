@@ -114,8 +114,8 @@ export function UseComposer({ licence }: { licence: LicenceRecord }) {
       <div className="eyebrow">Use composer</div>
       <h2>What do you want to do?</h2>
       <div className="sample-controls">
-        <span className="sample-controls-label">Try a sample use:</span>
-        <button className="secondary-action" type="button" onClick={() => loadSampleScenario("permission case", SAMPLE_INTENT_FACTS)} disabled={busy}>Permission case</button>
+        <span className="sample-controls-label">Sample use scenarios:</span>
+        <button className="secondary-action" type="button" onClick={() => loadSampleScenario("demo permission case", SAMPLE_INTENT_FACTS)} disabled={busy}>Use demo data</button>
         <button className="secondary-action" type="button" onClick={() => loadSampleScenario("denial case", DENIED_SAMPLE_INTENT_FACTS)} disabled={busy}>Denial case</button>
         <button className="secondary-action" type="button" onClick={() => loadSampleScenario("unresolved case", UNCLEAR_SAMPLE_INTENT_FACTS)} disabled={busy}>Unresolved case</button>
         <span>These buttons fill the form only; they do not submit a transaction.</span>

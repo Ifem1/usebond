@@ -51,7 +51,7 @@ ecbd0eb8eb0305d4417fcfca019d4cefb0071d3fce2a572e9e971f4611122ffb  ./frontend/sig
 e4910982891f97fac296306629bf62002f426c78fc8ce31ac38b32bb63303596  ./frontend/term-sheet/LicenceFolio.tsx
 6d5d2c00de2d7f7548eeb79aaf0714fabecb6d8bf80df8791bd9d806640a9d5c  ./frontend/tsconfig.json
 0e42d0845bdb386165308634c92c1dc9b0fc8a7bbfb089e37a5d923e7b35bd2e  ./frontend/tsconfig.tsbuildinfo
-24e8e10414fa15cf8a81c0f102fe55f6f13360e39fe2a31617c586ff3fd49173  ./frontend/use-composer/UseComposer.tsx
+c7c41f8aee5914f658445b593e737ab0d3c5d97445b0059fa374d280c237767d  ./frontend/use-composer/UseComposer.tsx
 4b8ab0383ab83f038993c36f2c6a31e8983dd71a3652b59c9c70d1f7eb619f11  ./gltest.config.yaml
 19bb3bd4e1aad5301712700258040db5fdc4ac867a9430580fe0c43101d4e4ab  ./package-lock.json
 ad2c57de81ce4c3d2e3f5e8580c22486df8f58584c71425ed9e07e1e5706a85d  ./package.json
