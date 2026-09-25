@@ -16,20 +16,35 @@
   "engineBinding": {
     "status": "verified by finalized live permit record",
     "issuer": "0x88C1b897759E57dD3f24c42ed26248FaE6F610A7",
-    "transaction": null,
-    "note": "The matching PermitBook record and successful live issuance prove the one-time binding. Exact binding transaction hash was not retained in the available CLI output."
+    "transaction": "0x8cd59a962f7660c79063f17eb4296ceb0b1c24732937e49bff5cc68863bdff52",
+    "finality": "FINALIZED",
+    "execution": "return",
+    "note": "Recovered from the PermitBook transaction index. A separate later rebind attempt rolled back with engine already bound."
   },
   "liveEvidence": {
     "licenceRegistration": "0x7f897a46e1932fbd9e00e2adc159bab27a7167c1d1a69e0b2f055dec56d2338a",
     "conditionalIntentCreation": "0x02d549299ebf884950d03b42412a6cf8cfc9404cb45a43da8cc54b0aa09d6e79",
-    "conditionalEvaluation": "0xc4c7d19dc9f6f1527adcdb7bcee121375324c38232d4f0c5a2f3dda9f086ed60",
+    "conditionalEvaluation": "0x9a3ae1280855be88d25c9480f02749430d92c0c45fbf71f93155ee33028d6141",
     "conditionalOutcome": "PERMITTED_WITH_CONDITIONS",
     "permitKey": "UBP-UBI-COMPARE-TEST-01",
+    "permitChildTransaction": "0xf66546b3631cf3e27afd835da5bc98845d2de2fee2cedae2ff63e510bb9e845f",
+    "permitChildFinality": "FINALIZED",
+    "permitChildExecution": "return",
+    "conditionalPermitExists": true,
     "deniedIntentCreation": "0xdfe4040b792bf5059de9e8bd09176ad80012833d037f8833b3d9aff74762a23a",
-    "deniedEvaluation": "0x4e3d908fc79a4a9d105fe0b7f8db590f3b8f21635548405ba7aceee4a8ee3af6",
+    "deniedEvaluation": "0xe169ab92ad692e07cd90b65fb13ec959f724cfdd8743f2641fed4a3c89f31630",
+    "deniedOutcome": "DENIED",
+    "deniedPermitExists": false,
     "inconclusiveIntentCreation": "0xf06d0e970bbe572de9d643ef7e727f1b74dfbac737bbd3d7bacf8b7549da5b97",
     "inconclusiveEvaluation": "0x939019adc7937f6f631737e30af6cd04480c39345941f2f864cb7b9dfe1c7b1c",
+    "inconclusiveOutcome": "INCONCLUSIVE",
+    "inconclusivePermitExists": false,
     "unauthorizedEvaluationAttempt": "0xe971c2a37217fc3a01dfc9e78e6b3f519afacdb94243bc4cc1c5f9578c726780",
-    "permitChildTransactionExposed": false
+    "unauthorizedExecution": "rollback: only intent holder may request evaluation",
+    "oldFailedRepeatEvaluations": [
+      "0xc4c7d19dc9f6f1527adcdb7bcee121375324c38232d4f0c5a2f3dda9f086ed60",
+      "0x4e3d908fc79a4a9d105fe0b7f8db590f3b8f21635548405ba7aceee4a8ee3af6"
+    ],
+    "liveEvidenceMethod": "Read-only verification of already-finalized Studionet records; no duplicate transactions submitted."
   }
 }

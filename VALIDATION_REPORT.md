@@ -12,10 +12,10 @@
 Chain 61999, RPC `https://studio.genlayer.com/api`. Canonical deployments, finalized lifecycle transaction hashes, outcomes, and permit checks are captured in `deployment-manifest.generated.json` and `FINAL_HANDOFF_STATUS.md`.
 
 - Fresh licence registration finalized.
-- Conditional permission evaluation finalized; `PERMITTED_WITH_CONDITIONS` persisted and matching finalized-only PermitBook record exists.
+- Conditional permission evaluation finalized and execution returned; `PERMITTED_WITH_CONDITIONS` persisted and matching finalized-only PermitBook record exists. Its finalized permit child was recovered from the Studionet transaction index and its execution returned.
 - DENIED and INCONCLUSIVE evaluations finalized with no permit record.
 - Different wallet's attempt to evaluate the owner's intent did not change evaluation count or stored assessment.
-- No separate child transaction ID was returned by this Studionet runtime for the finalized permit callback. Frontend verifies finalized parent plus canonical issuer/digests/outcome/`finalized_only` PermitBook record before displaying the passport.
+- The SDK's `getTriggeredTransactionIds` returned an empty list, but Studionet's address transaction index exposed the finalized permit child with `triggered_by` pointing to the successful parent evaluation and `triggered_on=finalized`. The frontend verifies finalized parent plus canonical issuer/digests/outcome/`finalized_only` PermitBook record before displaying the passport.
 
 ## Frontend
 

@@ -101,9 +101,9 @@ The finalized deployment manifest is `deployment-manifest.generated.json`.
 - PermitBook: `0xA7Ca373c4eb0A9da8770B310C60C1e3CE61F9676`
 - Deployment transactions: registry `0xf55ece2d712186155d8c6ee853992a1032ece3ba3146ad392d5db9d24328af21`, permit book `0x57e309bc5f5b7805614f608af40fbdb1d313fe0543f625c8842518d49b862c15`, permission engine `0x3c85db1b81f24874ea21f65736047d6a71f24330bd8c34294203c05661b10429`.
 
-All three deployments finalized. The new PermitBook is bound to the new PermissionEngine; successful finalized issuance records the new engine as issuer. The exact binding transaction hash was not retained, so it is not represented as a known hash in the manifest. Previous addresses above were superseded; see the manifest for historical context.
+All three deployments finalized. The PermitBook binding transaction is `0x8cd59a962f7660c79063f17eb4296ceb0b1c24732937e49bff5cc68863bdff52` (FINALIZED, execution returned). Previous addresses above were superseded; see the manifest for historical context.
 
-The real Studionet lifecycle is recorded in `deployment-manifest.generated.json`. A conditional permission, DENIED, INCONCLUSIVE, and foreign-evaluator attempt were exercised. Studionet exposed no separate child transaction ID for the finalized permit callback; the UI now requires a finalized evaluation plus a matching `finalized_only` PermitBook record from the canonical engine before rendering the passport.
+The real Studionet lifecycle is recorded in `deployment-manifest.generated.json`. The successful conditional evaluation `0x9a3ae1280855be88d25c9480f02749430d92c0c45fbf71f93155ee33028d6141` triggered permit child `0xf66546b3631cf3e27afd835da5bc98845d2de2fee2cedae2ff63e510bb9e845f`; both finalized and executed successfully. DENIED and INCONCLUSIVE evaluations finalized without permits, and a foreign evaluator was rejected. The child was recovered through Studionet's transaction index (`triggered_by` / `triggered_on=finalized`), although the SDK's `getTriggeredTransactionIds` returned an empty list.
 
 For Vercel, copy the six public values from `.env.generated` and redeploy the frontend yourself. No private keys belong in Vercel or this repository.
 
