@@ -29,6 +29,94 @@ jobs:
       - run: pytest tests/unit -q
       - run: pytest tests/direct -v
 
+  contract-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt
+      - name: GenVM lint and SDK validation
+        run: |
+          set -euo pipefail
+          for contract in             contracts/rights_registry.py             contracts/permission_engine.py             contracts/permit_book.py
+          do
+            echo "===== ${contract}: genvm-lint check ====="
+            genvm-lint check "${contract}"
+            echo "===== ${contract}: genvm-lint validate ====="
+            genvm-lint validate "${contract}"
+          done
+      - name: Verify finalized deployed source against repository
+        env:
+          GENLAYER_RPC: https://studio.genlayer.com/api
+        run: |
+          python - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+
+          rpc = os.environ["GENLAYER_RPC"]
+          contracts = {
+              "RightsRegistry": (
+                  "0x8D266231904d5eA14BEe00298A09BeC971572B2A",
+                  Path("contracts/rights_registry.py"),
+              ),
+              "PermissionEngine": (
+                  "0x88C1b897759E57dD3f24c42ed26248FaE6F610A7",
+                  Path("contracts/permission_engine.py"),
+              ),
+              "PermitBook": (
+                  "0xA7Ca373c4eb0A9da8770B310C60C1e3CE61F9676",
+                  Path("contracts/permit_book.py"),
+              ),
+          }
+
+          mismatches = []
+          for name, (address, source_path) in contracts.items():
+              payload = json.dumps({
+                  "jsonrpc": "2.0",
+                  "method": "gen_getContractCode",
+                  "params": [{"address": address, "status": "finalized"}],
+                  "id": 1,
+              }).encode("utf-8")
+              request = Request(
+                  rpc,
+                  data=payload,
+                  headers={"Content-Type": "application/json"},
+                  method="POST",
+              )
+              with urlopen(request, timeout=30) as response:
+                  result = json.load(response)
+              if "result" not in result:
+                  raise RuntimeError(f"{name}: gen_getContractCode failed: {result}")
+
+              deployed = base64.b64decode(result["result"])
+              repository = source_path.read_bytes()
+              deployed_sha = hashlib.sha256(deployed).hexdigest()
+              repository_sha = hashlib.sha256(repository).hexdigest()
+              exact_match = deployed == repository
+
+              print(f"{name} address={address}")
+              print(f"  deployed_bytes={len(deployed)} deployed_sha256={deployed_sha}")
+              print(f"  repository_bytes={len(repository)} repository_sha256={repository_sha}")
+              print(f"  exact_byte_match={str(exact_match).lower()}")
+
+              if not exact_match:
+                  mismatches.append(name)
+
+          if mismatches:
+              raise SystemExit(
+                  "DEPLOYED SOURCE MISMATCH: " + ", ".join(mismatches)
+              )
+
+          print("All three finalized deployed sources exactly match repository bytes.")
+          PY
+
   frontend:
     runs-on: ubuntu-latest
     steps:
