@@ -5,6 +5,7 @@ import { registerLicence } from "@/genlayer-runtime/writer";
 import { observeTransaction, type TxObservation } from "@/genlayer-runtime/tx-observer";
 import { explorerTx } from "@/genlayer-runtime/config";
 import { useRightsIdentity } from "@/signer/rights-identity";
+import { ExecutionResult } from "genlayer-js/types";
 
 const DEFAULT_MAP: Record<string, string> = {
   commercial_use: "conditional",
@@ -13,6 +14,11 @@ const DEFAULT_MAP: Record<string, string> = {
   redistribution: "denied",
   attribution: "required",
 };
+
+function isValidSource(value: string) {
+  const source = value.trim();
+  return source.length <= 512 && (source.startsWith("https://") || source.startsWith("ipfs://"));
+}
 
 export function PublishTermsComposer({ onClose, onRegistered }: { onClose: () => void; onRegistered: () => void }) {
   const identity = useRightsIdentity();
@@ -29,13 +35,21 @@ export function PublishTermsComposer({ onClose, onRegistered }: { onClose: () =>
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const canSubmit = useMemo(() =>
-    form.key.length >= 4 &&
-    form.title.length >= 3 &&
-    form.canonicalSource.startsWith("http") &&
-    form.rightsHolder.length >= 2 &&
-    form.termsText.length >= 80,
-  [form]);
+  const canSubmit = useMemo(() => {
+    const key = form.key.trim();
+    const title = form.title.trim();
+    const assetType = form.assetType.trim();
+    const holder = form.rightsHolder.trim();
+    const terms = form.termsText.trim();
+    const mapJson = JSON.stringify(rightsMap);
+    return /^[A-Za-z0-9._:-]{4,64}$/.test(key) &&
+      title.length >= 3 && title.length <= 140 &&
+      assetType.length >= 2 && assetType.length <= 48 &&
+      isValidSource(form.canonicalSource) &&
+      holder.length >= 2 && holder.length <= 140 &&
+      terms.length >= 80 && form.termsText.length <= 12000 &&
+      Object.keys(rightsMap).length > 0 && mapJson.length <= 6000;
+  }, [form, rightsMap]);
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -47,9 +61,27 @@ export function PublishTermsComposer({ onClose, onRegistered }: { onClose: () =>
     try {
       const account = identity.address || (await identity.connect());
       await identity.ensureNetwork();
-      const hash = await registerLicence(account, { ...form, rightsMap });
+      const hash = await registerLicence(account, {
+        key: form.key.trim(),
+        title: form.title.trim(),
+        assetType: form.assetType.trim(),
+        canonicalSource: form.canonicalSource.trim(),
+        rightsHolder: form.rightsHolder.trim(),
+        termsText: form.termsText.trim(),
+        rightsMap,
+      });
       const final = await observeTransaction(hash, setTx);
-      if (final.stage === "FINALIZED") onRegistered();
+      if (final.stage === "FINALIZED") {
+        const executionResult = (final.raw as { txExecutionResultName?: ExecutionResult } | null)?.txExecutionResultName;
+        if (executionResult === ExecutionResult.FINISHED_WITH_RETURN) onRegistered();
+        else if (executionResult === ExecutionResult.FINISHED_WITH_ERROR) {
+          setError("The transaction finalized, but the registry rejected the licence. Check the transaction details before retrying.");
+        } else {
+          setError("The transaction finalized, but its execution result is unavailable. Verify it in the explorer before retrying.");
+        }
+      } else if (final.stage === "FAILED" || final.stage === "UNDETERMINED") {
+        setError(`Registration did not complete (${final.stage.toLowerCase().replaceAll("_", " ")}). Check the transaction in the explorer.`);
+      }
     } catch (e: any) {
       setError(e?.message || "Terms registration failed.");
     } finally {
@@ -69,12 +101,12 @@ export function PublishTermsComposer({ onClose, onRegistered }: { onClose: () =>
 
       <div className="workbench-body">
         <div>
-          <div className="field"><label>Licence key</label><input value={form.key} onChange={(e) => update("key", e.target.value)} placeholder="UBL-MERIDIAN-01" /></div>
-          <div className="field"><label>Work or asset title</label><input value={form.title} onChange={(e) => update("title", e.target.value)} placeholder="Meridian Climate Data" /></div>
-          <div className="field"><label>Asset type</label><select value={form.assetType} onChange={(e) => update("assetType", e.target.value)}><option>dataset</option><option>images</option><option>code</option><option>media</option><option>document</option><option>model</option><option>other</option></select></div>
-          <div className="field"><label>Canonical source</label><input value={form.canonicalSource} onChange={(e) => update("canonicalSource", e.target.value)} placeholder="https://…" /></div>
-          <div className="field"><label>Rights holder</label><input value={form.rightsHolder} onChange={(e) => update("rightsHolder", e.target.value)} /></div>
-          <div className="field"><label>Frozen natural-language terms</label><textarea value={form.termsText} onChange={(e) => update("termsText", e.target.value)} placeholder="Paste the complete licence language that consensus must interpret…" /></div>
+          <div className="field"><label htmlFor="licence-key">Licence key</label><input id="licence-key" required maxLength={64} value={form.key} onChange={(e) => update("key", e.target.value)} placeholder="UBL-MERIDIAN-01" aria-describedby="licence-key-help" /><small id="licence-key-help">4–64 letters, numbers, dots, underscores, colons or hyphens.</small></div>
+          <div className="field"><label htmlFor="licence-title">Work or asset title</label><input id="licence-title" required minLength={3} maxLength={140} value={form.title} onChange={(e) => update("title", e.target.value)} placeholder="Meridian Climate Data" /></div>
+          <div className="field"><label htmlFor="licence-asset-type">Asset type</label><select id="licence-asset-type" required value={form.assetType} onChange={(e) => update("assetType", e.target.value)}><option>dataset</option><option>images</option><option>code</option><option>media</option><option>document</option><option>model</option><option>other</option></select></div>
+          <div className="field"><label htmlFor="licence-source">Canonical source</label><input id="licence-source" required maxLength={512} value={form.canonicalSource} onChange={(e) => update("canonicalSource", e.target.value)} placeholder="https://… or ipfs://…" aria-describedby="licence-source-help" /><small id="licence-source-help">Use https:// or ipfs:// (max 512 characters).</small></div>
+          <div className="field"><label htmlFor="licence-holder">Rights holder</label><input id="licence-holder" required minLength={2} maxLength={140} value={form.rightsHolder} onChange={(e) => update("rightsHolder", e.target.value)} /></div>
+          <div className="field"><label htmlFor="licence-terms">Frozen natural-language terms</label><textarea id="licence-terms" required minLength={80} maxLength={12000} value={form.termsText} onChange={(e) => update("termsText", e.target.value)} placeholder="Paste the complete licence language that consensus must interpret…" aria-describedby="licence-terms-help" /><small id="licence-terms-help">At least 80 non-space characters; {form.termsText.length}/12,000 characters.</small></div>
         </div>
 
         <div>
