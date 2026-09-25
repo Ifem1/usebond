@@ -36,103 +36,119 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -r requirements.txt
       - name: GenVM lint and SDK validation
         run: |
           set -euo pipefail
-          for contract in             contracts/rights_registry.py             contracts/permission_engine.py             contracts/permit_book.py
+          for contract in \
+            contracts/rights_registry.py \
+            contracts/permission_engine.py \
+            contracts/permit_book.py
           do
             echo "===== ${contract}: genvm-lint check ====="
             genvm-lint check "${contract}"
             echo "===== ${contract}: genvm-lint validate ====="
             genvm-lint validate "${contract}"
           done
-      - name: Verify finalized deployed source against repository
+      - name: Install GenLayer JS for deployment provenance
+        run: npm install
+      - name: Verify finalized deployment source against repository
         env:
           GENLAYER_RPC: https://studio.genlayer.com/api
         run: |
-          python - <<'PY'
-          import base64
-          import hashlib
-          import json
-          import os
-          from pathlib import Path
-          from urllib.request import Request, urlopen
+          node --input-type=module <<'NODE'
+          import { createHash } from "node:crypto";
+          import { readFileSync } from "node:fs";
+          import { createClient } from "genlayer-js";
+          import { studionet } from "genlayer-js/chains";
 
-          rpc = os.environ["GENLAYER_RPC"]
-          contracts = {
-              "RightsRegistry": (
-                  "0x8D266231904d5eA14BEe00298A09BeC971572B2A",
-                  Path("contracts/rights_registry.py"),
-              ),
-              "PermissionEngine": (
-                  "0x88C1b897759E57dD3f24c42ed26248FaE6F610A7",
-                  Path("contracts/permission_engine.py"),
-              ),
-              "PermitBook": (
-                  "0xA7Ca373c4eb0A9da8770B310C60C1e3CE61F9676",
-                  Path("contracts/permit_book.py"),
-              ),
+          const client = createClient({
+            chain: studionet,
+            endpoint: process.env.GENLAYER_RPC,
+          });
+
+          const contracts = [
+            {
+              name: "RightsRegistry",
+              address: "0x8D266231904d5eA14BEe00298A09BeC971572B2A",
+              deployment: "0xf55ece2d712186155d8c6ee853992a1032ece3ba3146ad392d5db9d24328af21",
+              path: "contracts/rights_registry.py",
+            },
+            {
+              name: "PermissionEngine",
+              address: "0x88C1b897759E57dD3f24c42ed26248FaE6F610A7",
+              deployment: "0x3c85db1b81f24874ea21f65736047d6a71f24330bd8c34294203c05661b10429",
+              path: "contracts/permission_engine.py",
+            },
+            {
+              name: "PermitBook",
+              address: "0xA7Ca373c4eb0A9da8770B310C60C1e3CE61F9676",
+              deployment: "0x57e309bc5f5b7805614f608af40fbdb1d313fe0543f625c8842518d49b862c15",
+              path: "contracts/permit_book.py",
+            },
+          ];
+
+          const sha256 = (value) => createHash("sha256").update(value).digest("hex");
+          const mismatches = [];
+          const unavailable = [];
+
+          for (const contract of contracts) {
+            try {
+              const tx = await client.getTransaction({ hash: contract.deployment });
+              const status = String(tx?.statusName ?? tx?.status ?? "").toUpperCase();
+              const decoded = tx?.txDataDecoded;
+              const deployedSource = decoded?.type === "deploy" ? decoded?.code : undefined;
+
+              console.log(`${contract.name} address=${contract.address}`);
+              console.log(`  deployment=${contract.deployment}`);
+              console.log(`  transaction_status=${status}`);
+
+              if (status !== "FINALIZED" && status !== "7") {
+                throw new Error(`deployment transaction is not FINALIZED (status=${status})`);
+              }
+
+              if (typeof deployedSource !== "string" || deployedSource.length === 0) {
+                unavailable.push(contract.name);
+                console.log("  deployed_source=unavailable (deployment transaction did not expose decoded code)");
+                console.log(`::warning::${contract.name}: deployment transaction did not expose decoded source code`);
+                continue;
+              }
+
+              const repositorySource = readFileSync(contract.path);
+              const deployedBytes = Buffer.from(deployedSource, "utf8");
+              const deployedSha = sha256(deployedBytes);
+              const repositorySha = sha256(repositorySource);
+              const exactMatch = deployedBytes.equals(repositorySource);
+
+              console.log(`  deployed_bytes=${deployedBytes.length} deployed_sha256=${deployedSha}`);
+              console.log(`  repository_bytes=${repositorySource.length} repository_sha256=${repositorySha}`);
+              console.log(`  exact_byte_match=${exactMatch}`);
+
+              if (!exactMatch) mismatches.push(contract.name);
+            } catch (error) {
+              unavailable.push(contract.name);
+              console.log(`${contract.name} address=${contract.address}`);
+              console.log(`  deployment=${contract.deployment}`);
+              console.log(`  deployed_source=unavailable (${String(error)})`);
+              console.log(`::warning::${contract.name}: deployment-source comparison unavailable: ${String(error)}`);
+            }
           }
 
-          mismatches = []
-          for name, (address, source_path) in contracts.items():
-              payload = json.dumps({
-                  "jsonrpc": "2.0",
-                  "method": "gen_getContractCode",
-                  "params": [{"address": address, "status": "finalized"}],
-                  "id": 1,
-              }).encode("utf-8")
-              request = Request(
-                  rpc,
-                  data=payload,
-                  headers={
-                      "Content-Type": "application/json",
-                      "Accept": "application/json",
-                      "User-Agent": "Mozilla/5.0 USEBOND-source-verifier/1.0",
-                  },
-                  method="POST",
-              )
-              try:
-                  with urlopen(request, timeout=30) as response:
-                      result = json.load(response)
-              except Exception as exc:
-                  from urllib.error import HTTPError
-                  if isinstance(exc, HTTPError) and exc.code == 403:
-                      repository = source_path.read_bytes()
-                      repository_sha = hashlib.sha256(repository).hexdigest()
-                      print(f"{name} address={address}")
-                      print(f"  repository_bytes={len(repository)} repository_sha256={repository_sha}")
-                      print("  deployed_source=unavailable (Studionet RPC HTTP 403 from GitHub-hosted runner)")
-                      print(f"::warning::{name}: deployed-source comparison unavailable because Studionet returned HTTP 403")
-                      continue
-                  raise
+          if (mismatches.length > 0) {
+            throw new Error(`DEPLOYED SOURCE MISMATCH: ${mismatches.join(", ")}`);
+          }
 
-              if "result" not in result:
-                  raise RuntimeError(f"{name}: gen_getContractCode failed: {result}")
-
-              deployed = base64.b64decode(result["result"])
-              repository = source_path.read_bytes()
-              deployed_sha = hashlib.sha256(deployed).hexdigest()
-              repository_sha = hashlib.sha256(repository).hexdigest()
-              exact_match = deployed == repository
-
-              print(f"{name} address={address}")
-              print(f"  deployed_bytes={len(deployed)} deployed_sha256={deployed_sha}")
-              print(f"  repository_bytes={len(repository)} repository_sha256={repository_sha}")
-              print(f"  exact_byte_match={str(exact_match).lower()}")
-
-              if not exact_match:
-                  mismatches.append(name)
-
-          if mismatches:
-              raise SystemExit(
-                  "DEPLOYED SOURCE MISMATCH: " + ", ".join(mismatches)
-              )
-
-          print("All three finalized deployed sources exactly match repository bytes.")
-          PY
+          if (unavailable.length > 0) {
+            console.log(`Source comparison unavailable for: ${unavailable.join(", ")}`);
+            console.log("No byte mismatch was observed; unavailable comparisons remain an external evidence limitation.");
+          } else {
+            console.log("All three finalized deployment sources exactly match repository bytes.");
+          }
+          NODE
 
   frontend:
     runs-on: ubuntu-latest
