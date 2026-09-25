@@ -37,7 +37,7 @@ f116b259ce357bf095bfa809373927847e8ce1d9c328ec17a3f3a595d11d5b74  ./frontend/gen
 93b815b456f1887bad4509343ea587ccee8a68a4dfb416d54cc8cb7cfd22dab5  ./frontend/genlayer-runtime/permit-evidence-core.d.mts
 29990176ee3691c13205119c451c7b15f6bee43fc20af3cd50f8f737d510b3ec  ./frontend/genlayer-runtime/permit-evidence-core.mjs
 2c1273c74ce9e2c24fb499972bc2ad0f42aa10de49be63375b1131c82f88645a  ./frontend/genlayer-runtime/permit-evidence.ts
-bf463b8402583dbe86c92030f4ddac2db28de6af269f07ef56d5cbfa8d5384c2  ./frontend/genlayer-runtime/reader.ts
+74968d43a8bff9ad1a60d4df39333e45db85a5eaaabb9c6368fdbc81290d6142  ./frontend/genlayer-runtime/reader.ts
 01e862acb76b9c5b0c12e7db7f629c5d615588b2db2dc32f0f2f1bb00407f639  ./frontend/genlayer-runtime/tx-observer.ts
 17d92dc69063a82d08d292c451a7095647ebc31d68823a5daa17fc3df659c874  ./frontend/genlayer-runtime/writer.ts
 1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b  ./frontend/next-env.d.ts

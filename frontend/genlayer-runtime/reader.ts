@@ -74,12 +74,20 @@ export async function findFinalizedPermitTransaction(permitKey: string): Promise
   try {
     const result = await client.request({
       method: "sim_getTransactionsForAddress",
-      params: [ADDRESSES.permitBook.toLowerCase() as `0x${string}`, "to"],
+      // Studionet's index returns decoded transaction metadata only with its
+      // default filter; the optional `to` filter omits the call payload there.
+      params: [ADDRESSES.permitBook.toLowerCase() as `0x${string}`],
     } as any);
-    if (!Array.isArray(result)) return null;
-    for (const item of result.slice(0, 100)) {
+    const entries = Array.isArray(result)
+      ? result
+      : Array.isArray((result as any)?.transactions)
+        ? (result as any).transactions
+        : Array.isArray((result as any)?.result)
+          ? (result as any).result
+          : [];
+    for (const item of entries.slice(0, 100)) {
       const tx: any = item;
-      const hash = String(tx?.hash || tx?.transaction_hash || tx?.transactionHash || tx?.id || "");
+      const hash = String(typeof item === "string" ? item : tx?.hash || tx?.transaction_hash || tx?.transactionHash || tx?.transaction_id || tx?.txId || tx?.txID || tx?.tx_id || tx?.id || "");
       if (!/^0x[0-9a-fA-F]{64}$/.test(hash)) continue;
       const observation = await inspectTransaction(hash);
       if (permitFromFinalizedIssuance(observation.raw, permitKey)) return hash;
