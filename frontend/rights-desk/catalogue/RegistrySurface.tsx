@@ -112,7 +112,7 @@ export function RegistrySurface() {
 
         {!deploymentReady() && (
           <div className="setup-memo">
-            <strong>Deployment configuration required.</strong> The registry UI is ready, but the three Studionet contract addresses are intentionally blank in this handoff. Deploy to chain 61999, copy <code>.env.generated</code> into the frontend environment, then reload.
+            <strong>Studionet configuration missing.</strong> Live registry reads and writes need the three finalized contract addresses in the frontend environment. Sample data only fills the form; it never creates mock registry records.
           </div>
         )}
 

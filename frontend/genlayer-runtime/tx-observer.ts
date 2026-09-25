@@ -1,6 +1,8 @@
 "use client";
 
 import { readonlyClient, signedClient } from "./client";
+export { transactionExecutionOutcome } from "./execution-outcome";
+export type { ExecutionOutcome } from "./execution-outcome";
 
 export type ObservedStage =
   | "SUBMITTED"

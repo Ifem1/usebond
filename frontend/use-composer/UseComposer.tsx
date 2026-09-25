@@ -4,9 +4,11 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { IntentFacts, LicenceRecord } from "@/genlayer-runtime/models";
 import { createIntent } from "@/genlayer-runtime/writer";
-import { observeTransaction, type TxObservation } from "@/genlayer-runtime/tx-observer";
+import { finalizeTransaction, observeTransaction, type TxObservation } from "@/genlayer-runtime/tx-observer";
+import { transactionExecutionOutcome } from "@/genlayer-runtime/execution-outcome";
 import { explorerTx } from "@/genlayer-runtime/config";
 import { useRightsIdentity } from "@/signer/rights-identity";
+import { DENIED_SAMPLE_INTENT_FACTS, SAMPLE_INTENT_FACTS, UNCLEAR_SAMPLE_INTENT_FACTS } from "@/demo-data";
 
 const ACTIONS = [
   "train a model",
@@ -16,7 +18,7 @@ const ACTIONS = [
   "publish generated outputs",
   "embed it in a product",
 ];
-const PURPOSES = ["a commercial product", "internal research", "academic publication", "a public service", "client work"];
+const PURPOSES = ["a commercial product", "internal research", "academic publication", "a public service", "client work", "insurance underwriting"];
 const DISTRIBUTIONS = ["outputs distributed publicly", "outputs kept internal", "outputs shared with clients", "no output distribution"];
 const TERRITORIES = ["worldwide", "United Kingdom and EU", "United States", "Nigeria", "specified territories only"];
 const ATTRIBUTION = ["attribution will be displayed", "attribution will be supplied in documentation", "no attribution is planned"];
@@ -42,10 +44,18 @@ export function UseComposer({ licence }: { licence: LicenceRecord }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [tx, setTx] = useState<TxObservation | null>(null);
+  const [pendingIntentKey, setPendingIntentKey] = useState("");
+  const [sampleScenario, setSampleScenario] = useState("");
 
   const statement = useMemo(() => {
     return `${facts.action} using ${licence.title} for ${facts.purpose}, with ${facts.distribution}, in ${facts.territory}. ${facts.attribution}. The source ${facts.source_redistribution ? "will" : "will not"} be redistributed and third parties ${facts.third_party_access ? "will" : "will not"} receive source access.${facts.extra_facts ? ` Additional facts: ${facts.extra_facts}` : ""}`;
   }, [facts, licence.title]);
+
+  function loadSampleScenario(label: string, sampleFacts: IntentFacts) {
+    setFacts({ ...sampleFacts });
+    setSampleScenario(label);
+    setError("");
+  }
 
   async function freezeIntent() {
     setBusy(true);
@@ -55,16 +65,45 @@ export function UseComposer({ licence }: { licence: LicenceRecord }) {
       await identity.ensureNetwork();
       const key = newIntentKey();
       const hash = await createIntent(account, key, licence.licence_key, facts);
+      setPendingIntentKey(key);
       const final = await observeTransaction(hash, setTx, { maxPolls: 120 });
-      if (["PROVISIONAL", "READY_TO_FINALIZE", "FINALIZED"].includes(final.stage)) {
+      if (final.stage === "FINALIZED" && transactionExecutionOutcome(final.raw) === "SUCCESS") {
         router.push(`/intent/${encodeURIComponent(key)}?createTx=${encodeURIComponent(hash)}`);
+      } else if (final.stage === "FINALIZED" && transactionExecutionOutcome(final.raw) === "FAILED") {
+        setError("Intent registration finalized with an execution error. It cannot be evaluated; inspect the transaction before retrying.");
       } else if (final.stage === "UNDETERMINED") {
         setError("Intent registration became undetermined. Do not treat it as registered; inspect the transaction before retrying.");
       } else if (final.stage === "FAILED") {
         setError("Intent registration did not complete.");
+      } else {
+        setError("Intent creation is not finalized yet. Check or finalize this transaction before evaluating it.");
       }
     } catch (e: any) {
       setError(e?.message || "Could not freeze this intent.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function checkOrFinalizeIntent() {
+    if (!tx || !pendingIntentKey) return;
+    setBusy(true);
+    setError("");
+    try {
+      const account = identity.address || (await identity.connect());
+      await identity.ensureNetwork();
+      let observation = await observeTransaction(tx.hash, setTx, { maxPolls: 120 });
+      if (observation.stage === "READY_TO_FINALIZE") {
+        await finalizeTransaction(tx.hash, account);
+        observation = await observeTransaction(tx.hash, setTx, { maxPolls: 120 });
+      }
+      if (observation.stage === "FINALIZED" && transactionExecutionOutcome(observation.raw) === "SUCCESS") {
+        router.push(`/intent/${encodeURIComponent(pendingIntentKey)}?createTx=${encodeURIComponent(tx.hash)}`);
+      } else {
+        setError(`Intent creation is ${observation.stage.toLowerCase().replaceAll("_", " ")} or did not execute successfully. It cannot be evaluated yet.`);
+      }
+    } catch (e: any) {
+      setError(e?.message || "Could not verify or finalize this intent.");
     } finally {
       setBusy(false);
     }
@@ -74,6 +113,13 @@ export function UseComposer({ licence }: { licence: LicenceRecord }) {
     <section className="use-composer">
       <div className="eyebrow">Use composer</div>
       <h2>What do you want to do?</h2>
+      <div className="sample-controls">
+        <span className="sample-controls-label">Try a sample use:</span>
+        <button className="secondary-action" type="button" onClick={() => loadSampleScenario("permission case", SAMPLE_INTENT_FACTS)} disabled={busy}>Permission case</button>
+        <button className="secondary-action" type="button" onClick={() => loadSampleScenario("denial case", DENIED_SAMPLE_INTENT_FACTS)} disabled={busy}>Denial case</button>
+        <button className="secondary-action" type="button" onClick={() => loadSampleScenario("unresolved case", UNCLEAR_SAMPLE_INTENT_FACTS)} disabled={busy}>Unresolved case</button>
+        <span>These buttons fill the form only; they do not submit a transaction.</span>
+      </div>
       <div className="sentence-builder">
         I want to{" "}
         <select className="inline-select" value={facts.action} onChange={(e) => setFacts((v) => ({ ...v, action: e.target.value }))}>{ACTIONS.map((v) => <option key={v}>{v}</option>)}</select>{" "}
@@ -95,8 +141,15 @@ export function UseComposer({ licence }: { licence: LicenceRecord }) {
         <p>{statement}</p>
       </div>
 
+      {sampleScenario && (
+        <div className="sample-note" role="status" aria-live="polite">
+          The {sampleScenario} starts from the illustrative terms scenario above. Any edits appear in the exact statement. <strong>Freeze this use intent</strong> submits a real Studionet transaction and may incur network fees.
+        </div>
+      )}
+
       {tx && <div className="tx-ribbon"><strong>{tx.stage.replaceAll("_", " ")}</strong><code>{tx.hash.slice(0, 14)}…</code><a href={explorerTx(tx.hash)} target="_blank" rel="noreferrer">explorer ↗</a></div>}
       {error && <p className="error-ink">{error}</p>}
+      {tx && pendingIntentKey && tx.stage !== "FINALIZED" && tx.stage !== "FAILED" && tx.stage !== "UNDETERMINED" && <button className="secondary-action" type="button" onClick={() => void checkOrFinalizeIntent()} disabled={busy}>{busy ? "Checking finality…" : tx.stage === "READY_TO_FINALIZE" ? "Finalize intent" : "Check intent finality"}</button>}
       <button className="primary-action" onClick={() => void freezeIntent()} disabled={busy}>{busy ? "Freezing intent…" : "Freeze this use intent"}</button>
     </section>
   );

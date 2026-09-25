@@ -37,7 +37,7 @@ export function LicenceFolio({ licenceKey }: { licenceKey: string }) {
           <RightsIdentityMark />
         </div>
 
-        {!deploymentReady() && <div className="setup-memo"><strong>Deployment configuration required.</strong> Add the finalized Studionet addresses before opening live licence folios.</div>}
+        {!deploymentReady() && <div className="setup-memo"><strong>Studionet configuration missing.</strong> Add the three finalized contract addresses to the frontend environment to open live licence folios.</div>}
         {loading && <div className="empty-ledger">Opening frozen terms…</div>}
         {error && <p className="error-ink">{error}</p>}
         {!loading && deploymentReady() && !licence && <div className="empty-ledger">No frozen licence exists under this key.</div>}

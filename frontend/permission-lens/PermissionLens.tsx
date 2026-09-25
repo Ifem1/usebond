@@ -8,6 +8,7 @@ import { parseJson } from "@/genlayer-runtime/models";
 import { readIntent, readLicence, readPermit } from "@/genlayer-runtime/reader";
 import { evaluateIntent } from "@/genlayer-runtime/writer";
 import { finalizeTransaction, inspectTransaction, observeTransaction, triggeredTransactions, type TxObservation } from "@/genlayer-runtime/tx-observer";
+import { transactionExecutionOutcome } from "@/genlayer-runtime/execution-outcome";
 import { ADDRESSES, deploymentReady, explorerTx } from "@/genlayer-runtime/config";
 import { RightsIdentityMark, useRightsIdentity } from "@/signer/rights-identity";
 
@@ -67,7 +68,11 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
       setActiveHash(hash);
       window.history.replaceState(null, "", `/intent/${encodeURIComponent(intentKey)}?tx=${encodeURIComponent(hash)}`);
       const observed = await observeTransaction(hash, setTx);
-      await load();
+      if (observed.stage === "FINALIZED" && transactionExecutionOutcome(observed.raw) === "FAILED") {
+        setError("Evaluation finalized with an execution error. No permission outcome or permit should be treated as valid.");
+      } else {
+        await load();
+      }
       if (observed.stage === "UNDETERMINED") {
         setError("Consensus could not resolve this interpretation. INCONCLUSIVE and UNDETERMINED are not permission grants.");
       }
@@ -87,8 +92,8 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
       await identity.ensureNetwork();
       await finalizeTransaction(activeHash, account);
       const parent = await observeTransaction(activeHash, setTx, { maxPolls: 120 });
-      await load();
-      if (parent.stage === "FINALIZED") {
+      if (parent.stage === "FINALIZED" && transactionExecutionOutcome(parent.raw) === "SUCCESS") {
+        await load();
         for (let i = 0; i < 20; i += 1) {
           const children = await triggeredTransactions(activeHash);
           if (children.length) {
@@ -99,7 +104,7 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
               await observeTransaction(childHash, () => undefined, { maxPolls: 120 });
             }
             const verifiedChild = await inspectTransaction(childHash);
-            if (verifiedChild.stage === "FINALIZED") {
+            if (verifiedChild.stage === "FINALIZED" && transactionExecutionOutcome(verifiedChild.raw) === "SUCCESS") {
               setPermitTx(childHash);
               const current = await readIntent(intentKey);
               if (current?.permit_key) setPermit(await readPermit(current.permit_key));
@@ -127,6 +132,8 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
             setPermitTx(activeHash);
           }
         }
+      } else if (parent.stage === "FINALIZED") {
+        setError("The evaluation did not execute successfully. No permit may be claimed from this transaction.");
       }
     } catch (e: any) {
       setError(e?.message || "Finalization failed.");

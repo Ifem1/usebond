@@ -61,6 +61,16 @@ demo/                      one complete licence + opposing intent scenarios
 
 There are no hidden technical routes for evidence, consensus, account, dashboard or settings.
 
+## Try the sample-data flow
+
+1. Open `/registry`, choose **Publish terms**, then choose **Use sample data**. This fills a fresh licence key and a realistic Eurostat population-projections example. The dataset is real, but the inserted terms are clearly marked as an illustrative test scenario—not an official Eurostat licence. Refer to the [dataset](https://ec.europa.eu/eurostat/databrowser/view/proj_23np/default/bar?lang=en) and [official reuse notice](https://ec.europa.eu/eurostat/help/copyright-notice).
+2. Review the fields and rights map. Choosing **Use sample data** does not submit anything. **Freeze terms** connects the injected wallet and submits a real registration transaction on Studionet.
+3. Open the newly registered record, review its frozen terms and source, then choose **Permission case** in Use Composer. Check the facts and exact-use preview; this button only fills fields.
+4. Choose **Freeze this use intent** to create a real on-chain intent. Wait until its creation is finalized; if needed, use **Check intent finality** or **Finalize intent** before continuing. In Permission Lens, review the frozen facts, then choose **Request interpretation** and follow the transaction until finality. `ACCEPTED` is provisional; use the page’s finalization action if prompted.
+5. For a permission result, follow the permit issuance and open the Permission Passport only after it is finalized. To test negative paths against the same licence, return to Use Composer and try **Denial case** (it requests full-source redistribution and third-party access) and **Unresolved case** (it proposes individual insurance decisions, which the sample terms intentionally leave open). `DENIED` and `INCONCLUSIVE` must not produce a passport. Consensus results are semantic, not canned demo outputs, so no outcome is hardcoded.
+
+The sample licence key is regenerated each time to avoid collisions with immutable on-chain records; each intent also gets a fresh key. Registration, intent creation, and evaluation are genuine Studionet writes and may incur network fees; use a test wallet funded only for testing. The sample rules do not assert or replace any real-world rights.
+
 ## Local validation
 
 ```bash

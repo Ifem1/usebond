@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import type { LicenceRecord, PermitRecord } from "@/genlayer-runtime/models";
 import { findFinalizedPermitTransaction, readLicence, readPermit } from "@/genlayer-runtime/reader";
 import { inspectTransaction } from "@/genlayer-runtime/tx-observer";
+import { transactionExecutionOutcome } from "@/genlayer-runtime/execution-outcome";
 import { deploymentReady, explorerAddress, explorerTx, ADDRESSES } from "@/genlayer-runtime/config";
 
 export function PermitPassport({ permitKey }: { permitKey: string }) {
@@ -37,7 +38,7 @@ export function PermitPassport({ permitKey }: { permitKey: string }) {
         const hinted = query.get("tx") || "";
         if (recordIsCanonical && /^0x[0-9a-fA-F]{64}$/.test(hinted)) {
           const observation = await inspectTransaction(hinted);
-          if (observation.stage === "FINALIZED") {
+          if (observation.stage === "FINALIZED" && transactionExecutionOutcome(observation.raw) === "SUCCESS") {
             setIssuanceTx(hinted);
             setVerified(true);
             return;

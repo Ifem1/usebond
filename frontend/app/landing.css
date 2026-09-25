@@ -633,6 +633,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .permission-passport::before { border-radius: 14px; border-color: var(--rule); }
 .permission-stamp { border-color: var(--pink); color: var(--wine); background: rgba(240,63,145,.05); }
 .setup-memo { border-left-color: var(--yellow); border-radius: 0 14px 14px 0; background: rgba(255,213,92,.12); }
+.sample-note { border-radius: 0 12px 12px 0; background: rgba(255,213,92,.14); }
 
 @media (max-width: 980px) {
   .home-nav { grid-template-columns: auto 1fr; }

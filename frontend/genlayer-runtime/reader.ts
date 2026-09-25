@@ -3,6 +3,7 @@
 import { ADDRESSES, deploymentReady } from "./config";
 import { readonlyClient } from "./client";
 import { inspectTransaction } from "./tx-observer";
+import { transactionExecutionOutcome } from "./execution-outcome";
 import type { IntentRecord, LicenceRecord, PermitRecord } from "./models";
 import { parseJson } from "./models";
 
@@ -73,7 +74,7 @@ export async function findFinalizedPermitTransaction(permitKey: string): Promise
   try {
     const result = await client.request({
       method: "sim_getTransactionsForAddress",
-      params: [ADDRESSES.permitBook as `0x${string}`, "to"],
+      params: [ADDRESSES.permitBook.toLowerCase() as `0x${string}`],
     } as any);
     if (!Array.isArray(result)) return null;
     for (const item of result) {
@@ -82,7 +83,7 @@ export async function findFinalizedPermitTransaction(permitKey: string): Promise
       const hash = String(tx?.hash || tx?.transaction_hash || tx?.transactionHash || tx?.id || "");
       if (!/^0x[0-9a-fA-F]{64}$/.test(hash)) continue;
       const observation = await inspectTransaction(hash);
-      if (observation.stage === "FINALIZED") return hash;
+      if (observation.stage === "FINALIZED" && transactionExecutionOutcome(observation.raw) === "SUCCESS") return hash;
     }
   } catch {
     return null;

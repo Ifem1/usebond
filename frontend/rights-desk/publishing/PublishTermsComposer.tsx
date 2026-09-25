@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import { registerLicence } from "@/genlayer-runtime/writer";
 import { observeTransaction, type TxObservation } from "@/genlayer-runtime/tx-observer";
+import { transactionExecutionOutcome } from "@/genlayer-runtime/execution-outcome";
 import { explorerTx } from "@/genlayer-runtime/config";
 import { useRightsIdentity } from "@/signer/rights-identity";
-import { ExecutionResult } from "genlayer-js/types";
+import { createSampleLicence } from "@/demo-data";
 
 const DEFAULT_MAP: Record<string, string> = {
   commercial_use: "conditional",
@@ -34,6 +35,7 @@ export function PublishTermsComposer({ onClose, onRegistered }: { onClose: () =>
   const [tx, setTx] = useState<TxObservation | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sampleLoaded, setSampleLoaded] = useState(false);
 
   const canSubmit = useMemo(() => {
     const key = form.key.trim();
@@ -55,6 +57,21 @@ export function PublishTermsComposer({ onClose, onRegistered }: { onClose: () =>
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function useSampleData() {
+    const sample = createSampleLicence();
+    setForm({
+      key: sample.key,
+      title: sample.title,
+      assetType: sample.assetType,
+      canonicalSource: sample.canonicalSource,
+      rightsHolder: sample.rightsHolder,
+      termsText: sample.termsText,
+    });
+    setRightsMap(sample.rightsMap);
+    setSampleLoaded(true);
+    setError("");
+  }
+
   async function submit() {
     setError("");
     setBusy(true);
@@ -72,9 +89,9 @@ export function PublishTermsComposer({ onClose, onRegistered }: { onClose: () =>
       });
       const final = await observeTransaction(hash, setTx);
       if (final.stage === "FINALIZED") {
-        const executionResult = (final.raw as { txExecutionResultName?: ExecutionResult } | null)?.txExecutionResultName;
-        if (executionResult === ExecutionResult.FINISHED_WITH_RETURN) onRegistered();
-        else if (executionResult === ExecutionResult.FINISHED_WITH_ERROR) {
+        const executionResult = transactionExecutionOutcome(final.raw);
+        if (executionResult === "SUCCESS") onRegistered();
+        else if (executionResult === "FAILED") {
           setError("The transaction finalized, but the registry rejected the licence. Check the transaction details before retrying.");
         } else {
           setError("The transaction finalized, but its execution result is unavailable. Verify it in the explorer before retrying.");
@@ -129,6 +146,11 @@ export function PublishTermsComposer({ onClose, onRegistered }: { onClose: () =>
           <div className="setup-memo" style={{ marginTop: 20 }}>
             The rights map helps people scan the licence. The frozen natural-language terms remain the authoritative input to consensus.
           </div>
+          {sampleLoaded && (
+            <div className="sample-note" role="status" aria-live="polite">
+              Sample uses the real Eurostat <a href="https://ec.europa.eu/eurostat/databrowser/view/proj_23np/default/bar?lang=en" target="_blank" rel="noreferrer">population projections dataset ↗</a>, but the inserted rules are illustrative—not official Eurostat terms. See the <a href="https://ec.europa.eu/eurostat/help/copyright-notice" target="_blank" rel="noreferrer">official reuse notice ↗</a>. Loading this data does not write to Studionet; <strong>Freeze terms</strong> submits a real registration transaction.
+            </div>
+          )}
           {tx && (
             <div className="tx-ribbon">
               <strong>{tx.stage.replaceAll("_", " ")}</strong>
@@ -141,6 +163,7 @@ export function PublishTermsComposer({ onClose, onRegistered }: { onClose: () =>
       </div>
 
       <div className="workbench-actions">
+        <button className="secondary-action" type="button" onClick={useSampleData} disabled={busy}>Use sample data</button>
         <button className="secondary-action" onClick={onClose}>Cancel</button>
         <button className="primary-action" disabled={!canSubmit || busy} onClick={() => void submit()}>{busy ? "Registering…" : "Freeze terms"}</button>
       </div>
