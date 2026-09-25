@@ -1,9 +1,20 @@
+import { abi } from "genlayer-js";
+
 function address(value) {
   return typeof value === "string" ? value.toLowerCase() : "";
 }
 
 function callData(raw) {
-  const decoded = raw?.txDataDecoded?.callData ?? raw?.data?.callData ?? raw?.callData;
+  let decoded = raw?.txDataDecoded?.callData ?? raw?.data?.callData ?? raw?.callData;
+  if (decoded instanceof Map) decoded = Object.fromEntries(decoded);
+  if ((!decoded || typeof decoded !== "object") && Array.isArray(raw?.data?.calldata?.raw)) {
+    try {
+      decoded = abi.calldata.decode(Uint8Array.from(raw.data.calldata.raw));
+      if (decoded instanceof Map) decoded = Object.fromEntries(decoded);
+    } catch {
+      return null;
+    }
+  }
   if (!decoded || typeof decoded !== "object") return null;
   const method = String(decoded.method ?? decoded.functionName ?? "");
   return method && Array.isArray(decoded.args) ? { method, args: decoded.args } : null;

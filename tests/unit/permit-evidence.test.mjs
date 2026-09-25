@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { abi } from "genlayer-js";
 import { recoverPermitFromIssuance } from "../../frontend/genlayer-runtime/permit-evidence-core.mjs";
 
 const engine = "0x88C1b897759E57dD3f24c42ed26248FaE6F610A7";
@@ -22,18 +23,19 @@ const expectedIntent = {
   assessment_outcome: "PERMITTED_WITH_CONDITIONS",
 };
 function tx(overrides = {}) {
+  const args = [
+    expectedIntent.permit_key,
+    expectedIntent.intent_key,
+    expectedIntent.licence_key,
+    expectedIntent.holder,
+    JSON.stringify(decision),
+  ];
   return {
     statusName: "FINALIZED",
     txExecutionResultName: "FINISHED_WITH_RETURN",
     sender: engine,
     recipient: permitBook,
-    txDataDecoded: { callData: { method: "issue_permit", args: [
-      expectedIntent.permit_key,
-      expectedIntent.intent_key,
-      expectedIntent.licence_key,
-      expectedIntent.holder,
-      JSON.stringify(decision),
-    ] } },
+    data: { calldata: { raw: Array.from(abi.calldata.encode(abi.calldata.makeCalldataObject("issue_permit", args, undefined))) } },
     ...overrides,
   };
 }
