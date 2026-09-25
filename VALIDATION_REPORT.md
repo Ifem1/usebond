@@ -5,7 +5,7 @@
 - `python -m py_compile` over all `contracts/*.py` and `support/*.py`: **passed**.
 - `pytest tests/unit -q`: **29 passed**.
 - `genvm-lint check` for RightsRegistry, PermissionEngine, PermitBook: syntax lint reported **3 checks passed** for each. SDK validation failed to load the SDK from the linter cache with Windows `WinError 5: Access is denied`; this is not reported as a full lint pass.
-- `pytest tests/direct -v`: **2 passed, 4 failed before contract execution**. Failures are in `genlayer-test 0.29.2` `_inject_message_to_fd0`, which attempts to unlink a temporary file still open (`PermissionError: [WinError 32]`).
+- `pytest tests/direct -v` on GitHub Actions `ubuntu-latest` with Python 3.12 and the repository's unchanged `requirements.txt`: **6 passed in 31.89s**. The prior Windows-only `genlayer-test 0.29.2` temp-file unlink `PermissionError` did not reproduce on Linux. CI run: https://github.com/Ifem1/usebond/actions/runs/36127693802.
 
 ## Live Studionet evidence
 

@@ -8,7 +8,7 @@
 - [x] PermitBook is bound once to the replacement engine; successful finalized binding transaction recorded as `0x8cd59a962f7660c79063f17eb4296ceb0b1c24732937e49bff5cc68863bdff52`.
 - [x] Permit issuance remains `on="finalized"`.
 - [ ] GenVM SDK validation (syntax checks pass; external SDK cache access denied on Windows).
-- [ ] Direct-mode suite (blocked before contract execution by `genlayer-test` Windows temp-file unlink error: 2 passed, 4 blocked).
+- [x] Direct-mode suite on GitHub Actions `ubuntu-latest`: **6/6 passed in 31.89s** using Python 3.12 and the repository's unchanged `requirements.txt`; the prior Windows temp-file unlink error did not reproduce. Run: https://github.com/Ifem1/usebond/actions/runs/36127693802.
 - [ ] Exact deployed-source byte-for-byte comparison archived for each canonical address.
 
 ## Studionet and live flows
@@ -32,4 +32,4 @@
 - [x] No private test key stored in the repository or output.
 - [x] Final deployment and lifecycle documentation updated.
 - [x] Final source manifest hash regenerated after source and documentation changes.
-- [ ] Final commit and push to `main`.
+- [x] Direct Mode CI and validation evidence committed and pushed to `main`.
