@@ -194,5 +194,6 @@ jobs:
         with:
           node-version: "22"
       - run: npm install
+      - run: node --test tests/unit/permit-evidence.test.mjs
       - run: npm run typecheck
       - run: npm run build

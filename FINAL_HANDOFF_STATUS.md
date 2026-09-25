@@ -36,11 +36,11 @@ The Permission Lens / Passport read issue was traced to the Studionet PermitBook
 
 - Python compile: passed.
 - Unit tests: 29 passed.
-- GenVM lint syntax checks: passed for all three contracts. SDK validation could not load the linter cache due Windows access denied.
-- Direct-mode tests: 2 passed, 4 blocked by `genlayer-test` 0.29.2 Windows temp-file unlink (`WinError 32`) before contract test execution.
+- GenVM lint and full SDK validation: **passed for all three contracts** on GitHub Actions `ubuntu-latest` with Python 3.12. CI runs both `genvm-lint check` and explicit `genvm-lint validate` for each contract. The previous Windows SDK-cache access denial is historical.
+- Direct Mode: **6/6 passed** on the GitHub Actions Ubuntu runner with Python 3.12 and the repository's unchanged `requirements.txt`. The prior Windows temp-file unlink issue did not reproduce on Linux.
 - TypeScript typecheck and Next production build passed before and after the rights-map rendering fix; all routes generated.
 - Permission issuance fallback tests: **5/5 passed** (`node --test tests/unit/permit-evidence.test.mjs`); final frontend typecheck and production build passed with the recovery path.
 - Production Vercel deployment: verified on `main` commit `1260da4`; the hosted Permission Lens displays the finalized issuance link, and the linked public Passport renders the correct outcome, holder, intent, digests, and conditions. Canonical contract addresses remain unchanged and match the production bundle.
 - Hosted wallet-connected lifecycle: the user manually completed the frontend interaction after the UI fixes. The screenshot evidence shows the finalized Permission Passport for `UBI-B0873E620B54`, with `PERMITTED WITH CONDITIONS`, holder, licence/intent identifiers, digests, and both conditions. This closes the previously noted wallet-connected lifecycle verification gap.
 
-No known end-to-end lifecycle blocker remains. Reproducibility caveats are limited to the Windows linter's SDK-cache access denial and the absence of an archived byte-for-byte deployed-source comparison; these do not invalidate the finalized live lifecycle evidence above. Private test keys were not included in Git or this handoff.
+No known product or lifecycle blocker remains. Deployed-source provenance is now archived in `DEPLOYED_SOURCE_PROVENANCE.md`: RightsRegistry and PermitBook match repository bytes exactly; PermissionEngine is byte-different only because the deployed source uses CRLF and the Git checkout uses LF, and its EOL-normalized content matches exactly. No contract or validator logic mismatch was found, so no redeployment is warranted. Private test keys were not included in Git or this handoff.

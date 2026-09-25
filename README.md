@@ -15,7 +15,7 @@ A permission credential is issued only for permission outcomes, through a separa
 - **Network:** GenLayer Studionet (`61999`)
 - **Lifecycle:** completed end to end, including finalized conditional evaluation and permit issuance, finalized `DENIED` and `INCONCLUSIVE` cases without permits, and rejection of an unauthorized evaluator.
 - **Frontend:** manually exercised through the completed wallet-connected lifecycle; the finalized Permission Passport displays the outcome and conditions. Vercel deployment is managed by the project owner.
-- **Evidence:** see [`FINAL_HANDOFF_STATUS.md`](FINAL_HANDOFF_STATUS.md) and [`deployment-manifest.generated.json`](deployment-manifest.generated.json).
+- **Evidence:** see [`FINAL_HANDOFF_STATUS.md`](FINAL_HANDOFF_STATUS.md), [`DEPLOYED_SOURCE_PROVENANCE.md`](DEPLOYED_SOURCE_PROVENANCE.md), and [`deployment-manifest.generated.json`](deployment-manifest.generated.json).
 
 ## Contract architecture
 
@@ -101,8 +101,11 @@ After installing the current GenLayer toolchain:
 
 ```bash
 genvm-lint check contracts/rights_registry.py
+genvm-lint validate contracts/rights_registry.py
 genvm-lint check contracts/permission_engine.py
+genvm-lint validate contracts/permission_engine.py
 genvm-lint check contracts/permit_book.py
+genvm-lint validate contracts/permit_book.py
 pytest tests/direct -v
 ```
 
@@ -115,7 +118,7 @@ npm run build
 npm run dev
 ```
 
-Latest recorded checks: Python compile passed; unit tests **29 passed**; permit-evidence tests **5/5 passed**; GenVM syntax lint **3 checks passed per contract** (the Windows linter could not load its SDK cache); TypeScript typecheck and Next.js production build passed; direct-mode suite **6/6 passed** on GitHub Actions Ubuntu. See [`VALIDATION_REPORT.md`](VALIDATION_REPORT.md) for versions, platform-specific details, and the CI run.
+Latest recorded checks: Python compile passed; unit tests **29/29 passed**; permit-evidence tests **5/5 passed**; GenVM `check` and full SDK `validate` both passed for all three contracts on GitHub Actions Ubuntu with Python 3.12; TypeScript typecheck and Next.js production build passed; Direct Mode **6/6 passed** on the same Ubuntu/Python 3.12 environment. The earlier Windows temp-file and SDK-cache failures are historical and did not reproduce on Linux. Deployed-source provenance is archived: RightsRegistry and PermitBook are exact byte matches; PermissionEngine is an EOL-only byte difference and matches exactly after CRLF/LF normalization. See [`VALIDATION_REPORT.md`](VALIDATION_REPORT.md) and [`DEPLOYED_SOURCE_PROVENANCE.md`](DEPLOYED_SOURCE_PROVENANCE.md).
 
 ## Deployment
 

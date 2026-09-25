@@ -5,7 +5,7 @@
   "contracts": {
     "registry": "0x8D266231904d5eA14BEe00298A09BeC971572B2A",
     "permissionEngine": "0x88C1b897759E57dD3f24c42ed26248FaE6F610A7",
-    "permitBook": "0xA7Ca373c4eb0A9da8770B310c60C1e3CE61F9676"
+    "permitBook": "0xA7Ca373c4eb0A9da8770B310C60C1e3CE61F9676"
   },
   "deploymentTransactions": {
     "registry": "0xf55ece2d712186155d8c6ee853992a1032ece3ba3146ad392d5db9d24328af21",
