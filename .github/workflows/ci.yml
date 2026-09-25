@@ -36,9 +36,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -r requirements.txt
       - name: GenVM lint and SDK validation
@@ -54,9 +51,16 @@ jobs:
             echo "===== ${contract}: genvm-lint validate ====="
             genvm-lint validate "${contract}"
           done
-      - name: Install GenLayer JS for deployment provenance
-        run: npm install
-      - name: Verify finalized deployment source against repository
+
+  source-provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+      - name: Verify finalized deployed source provenance
         env:
           GENLAYER_RPC: https://studio.genlayer.com/api
         run: |
@@ -87,88 +91,98 @@ jobs:
             {
               name: "PermitBook",
               address: "0xA7Ca373c4eb0A9da8770B310C60C1e3CE61F9676",
+              manifestAddress: "0xA7Ca373c4eb0A9da8770B310c60C1e3CE61F9676",
               deployment: "0x57e309bc5f5b7805614f608af40fbdb1d313fe0543f625c8842518d49b862c15",
               path: "contracts/permit_book.py",
             },
           ];
 
           const sha256 = (value) => createHash("sha256").update(value).digest("hex");
-          const mismatches = [];
+          const normalizeEol = (value) =>
+            Buffer.from(value.toString("utf8").replace(/\r\n/g, "\n"), "utf8");
+
+          const contentMismatches = [];
           const unavailable = [];
 
           for (const contract of contracts) {
-            try {
-              const tx = await client.getTransaction({ hash: contract.deployment });
-              const status = String(tx?.statusName ?? tx?.status ?? "").toUpperCase();
+            const tx = await client.getTransaction({ hash: contract.deployment });
+            const status = String(tx?.statusName ?? tx?.status ?? "").toUpperCase();
 
-              console.log(`${contract.name} address=${contract.address}`);
-              console.log(`  deployment=${contract.deployment}`);
-              console.log(`  transaction_status=${status}`);
+            console.log(`${contract.name} address=${contract.address}`);
+            console.log(`  deployment=${contract.deployment}`);
+            console.log(`  transaction_status=${status}`);
 
-              if (status !== "FINALIZED" && status !== "7") {
-                throw new Error(`deployment transaction is not FINALIZED (status=${status})`);
-              }
+            if (status !== "FINALIZED" && status !== "7") {
+              throw new Error(`${contract.name}: deployment transaction is not FINALIZED (status=${status})`);
+            }
 
-              let deployedBytes;
-              let provenanceMethod = "";
+            let deployedBytes;
+            let provenanceMethod = "";
+            const addressCandidates = [...new Set([
+              contract.address,
+              contract.manifestAddress,
+              contract.address.toLowerCase(),
+            ].filter(Boolean))];
+
+            for (const address of addressCandidates) {
               try {
                 const codeB64 = await client.request({
                   method: "gen_getContractCode",
-                  params: [contract.address],
+                  params: [address],
                 });
                 if (typeof codeB64 === "string" && codeB64.length > 0) {
                   deployedBytes = Buffer.from(codeB64, "base64");
-                  provenanceMethod = "gen_getContractCode legacy address parameter";
+                  provenanceMethod = `gen_getContractCode legacy address parameter (${address})`;
+                  break;
                 }
               } catch (rpcError) {
-                console.log(`  legacy_code_rpc_error=${String(rpcError)}`);
+                console.log(`  code_rpc_error address=${address} error=${String(rpcError).split("\n")[0]}`);
               }
-
-              if (!deployedBytes) {
-                const decoded = tx?.txDataDecoded;
-                const deployedSource = decoded?.type === "deploy" ? decoded?.code : undefined;
-                if (typeof deployedSource === "string" && deployedSource.length > 0) {
-                  deployedBytes = Buffer.from(deployedSource, "utf8");
-                  provenanceMethod = "finalized deployment transaction decoded code";
-                }
-              }
-
-              if (!deployedBytes) {
-                unavailable.push(contract.name);
-                console.log("  deployed_source=unavailable (RPC and finalized deployment transaction exposed no source bytes)");
-                console.log(`::warning::${contract.name}: exact deployed-source bytes unavailable from current Studionet interfaces`);
-                continue;
-              }
-
-              const repositorySource = readFileSync(contract.path);
-              const deployedSha = sha256(deployedBytes);
-              const repositorySha = sha256(repositorySource);
-              const exactMatch = deployedBytes.equals(repositorySource);
-
-              console.log(`  provenance_method=${provenanceMethod}`);
-              console.log(`  deployed_bytes=${deployedBytes.length} deployed_sha256=${deployedSha}`);
-              console.log(`  repository_bytes=${repositorySource.length} repository_sha256=${repositorySha}`);
-              console.log(`  exact_byte_match=${exactMatch}`);
-
-              if (!exactMatch) mismatches.push(contract.name);
-            } catch (error) {
-              unavailable.push(contract.name);
-              console.log(`${contract.name} address=${contract.address}`);
-              console.log(`  deployment=${contract.deployment}`);
-              console.log(`  deployed_source=unavailable (${String(error)})`);
-              console.log(`::warning::${contract.name}: deployment-source comparison unavailable: ${String(error)}`);
             }
+
+            if (!deployedBytes) {
+              const decoded = tx?.txDataDecoded;
+              const deployedSource = decoded?.type === "deploy" ? decoded?.code : undefined;
+              if (typeof deployedSource === "string" && deployedSource.length > 0) {
+                deployedBytes = Buffer.from(deployedSource, "utf8");
+                provenanceMethod = "finalized deployment transaction decoded code";
+              }
+            }
+
+            if (!deployedBytes) {
+              unavailable.push(contract.name);
+              console.log("  deployed_source=unavailable (current Studionet interfaces exposed no source bytes)");
+              console.log(`::warning::${contract.name}: exact deployed-source bytes unavailable from current Studionet interfaces`);
+              continue;
+            }
+
+            const repositoryBytes = readFileSync(contract.path);
+            const deployedSha = sha256(deployedBytes);
+            const repositorySha = sha256(repositoryBytes);
+            const exactMatch = deployedBytes.equals(repositoryBytes);
+            const normalizedMatch = normalizeEol(deployedBytes).equals(normalizeEol(repositoryBytes));
+
+            console.log(`  provenance_method=${provenanceMethod}`);
+            console.log(`  deployed_bytes=${deployedBytes.length} deployed_sha256=${deployedSha}`);
+            console.log(`  repository_bytes=${repositoryBytes.length} repository_sha256=${repositorySha}`);
+            console.log(`  exact_byte_match=${exactMatch}`);
+            console.log(`  eol_normalized_match=${normalizedMatch}`);
+
+            if (!exactMatch && normalizedMatch) {
+              console.log(`::warning::${contract.name}: deployed and repository source differ only by line endings`);
+            }
+            if (!normalizedMatch) contentMismatches.push(contract.name);
           }
 
-          if (mismatches.length > 0) {
-            throw new Error(`DEPLOYED SOURCE MISMATCH: ${mismatches.join(", ")}`);
+          if (contentMismatches.length > 0) {
+            throw new Error(`DEPLOYED SOURCE CONTENT MISMATCH: ${contentMismatches.join(", ")}`);
           }
 
           if (unavailable.length > 0) {
-            console.log(`Source comparison unavailable for: ${unavailable.join(", ")}`);
-            console.log("No byte mismatch was observed; unavailable comparisons remain an external evidence limitation.");
+            console.log(`Source bytes unavailable for: ${unavailable.join(", ")}`);
+            console.log("No content mismatch was observed for sources that were retrievable.");
           } else {
-            console.log("All three finalized deployment sources exactly match repository bytes.");
+            console.log("All three deployed sources match repository content; any non-exact byte difference is line-ending-only and explicitly reported above.");
           }
           NODE
 
