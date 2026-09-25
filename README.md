@@ -1,4 +1,4 @@
-# USEBOND
+# USEBOND — Rights Registry & Permission Passports
 
 USEBOND is a GenLayer rights-clearing application for frozen licence terms and exact intended uses. A rights holder registers immutable natural-language terms. A user freezes a concrete use intent. GenLayer consensus then interprets that exact use against that exact licence and returns one of four bounded outcomes:
 
@@ -8,6 +8,24 @@ USEBOND is a GenLayer rights-clearing application for frozen licence terms and e
 - `INCONCLUSIVE`
 
 A permission credential is issued only for permission outcomes, through a separate permit contract, and the issuing message is scheduled `on="finalized"` from the semantic decision transaction.
+
+## Current release
+
+- **Production app:** [usebond-frontend.vercel.app](https://usebond-frontend.vercel.app/)
+- **Network:** GenLayer Studionet (`61999`)
+- **Lifecycle:** completed end to end, including finalized conditional evaluation and permit issuance, finalized `DENIED` and `INCONCLUSIVE` cases without permits, and rejection of an unauthorized evaluator.
+- **Frontend:** manually exercised through the completed wallet-connected lifecycle; the finalized Permission Passport displays the outcome and conditions. Vercel deployment is managed by the project owner.
+- **Evidence:** see [`FINAL_HANDOFF_STATUS.md`](FINAL_HANDOFF_STATUS.md) and [`deployment-manifest.generated.json`](deployment-manifest.generated.json).
+
+## Contract architecture
+
+| Contract | Responsibility | Canonical Studionet address |
+| --- | --- | --- |
+| **RightsRegistry** | Registers immutable licence text, rights map, and terms digest. | [`0x8D266231904d5eA14BEe00298A09BeC971572B2A`](https://explorer-studio.genlayer.com/address/0x8D266231904d5eA14BEe00298A09BeC971572B2A) |
+| **PermissionEngine** | Freezes exact-use intents and independently evaluates them against registered terms. | [`0x88C1b897759E57dD3f24c42ed26248FaE6F610A7`](https://explorer-studio.genlayer.com/address/0x88C1b897759E57dD3f24c42ed26248FaE6F610A7) |
+| **PermitBook** | Issues a permission passport only from the bound engine after finalized permission outcomes. | [`0xA7Ca373c4eb0A9da8770B310C60C1e3CE61F9676`](https://explorer-studio.genlayer.com/address/0xA7Ca373c4eb0A9da8770B310C60C1e3CE61F9676) |
+
+Finalized deployment transactions: [RightsRegistry](https://explorer-studio.genlayer.com/tx/0xf55ece2d712186155d8c6ee853992a1032ece3ba3146ad392d5db9d24328af21), [PermitBook](https://explorer-studio.genlayer.com/tx/0x57e309bc5f5b7805614f608af40fbdb1d313fe0543f625c8842518d49b862c15), [PermissionEngine](https://explorer-studio.genlayer.com/tx/0x3c85db1b81f24874ea21f65736047d6a71f24330bd8c34294203c05661b10429). The one-time engine binding is [finalized](https://explorer-studio.genlayer.com/tx/0x8cd59a962f7660c79063f17eb4296ceb0b1c24732937e49bff5cc68863bdff52). See the manifest for lifecycle transactions and outcomes.
 
 ## Target network
 
@@ -97,6 +115,8 @@ npm run build
 npm run dev
 ```
 
+Latest recorded checks: Python compile passed; unit tests **29 passed**; permit-evidence tests **5/5 passed**; GenVM syntax lint **3 checks passed per contract** (the Windows linter could not load its SDK cache); TypeScript typecheck and Next.js production build passed; direct-mode suite **6/6 passed** on GitHub Actions Ubuntu. See [`VALIDATION_REPORT.md`](VALIDATION_REPORT.md) for versions, platform-specific details, and the CI run.
+
 ## Deployment
 
 The canonical deployment is finalized on Studionet 61999. No private key is stored in the repository or Vercel; writes use an injected EIP-1193 wallet.
@@ -114,11 +134,11 @@ The finalized deployment manifest is `deployment-manifest.generated.json`.
 
 All three deployments finalized. The PermitBook binding transaction is `0x8cd59a962f7660c79063f17eb4296ceb0b1c24732937e49bff5cc68863bdff52` (FINALIZED, execution returned). Previous addresses above were superseded; see the manifest for historical context.
 
-The real Studionet lifecycle is recorded in `deployment-manifest.generated.json`. The successful conditional evaluation `0x9a3ae1280855be88d25c9480f02749430d92c0c45fbf71f93155ee33028d6141` triggered permit child `0xf66546b3631cf3e27afd835da5bc98845d2de2fee2cedae2ff63e510bb9e845f`; both finalized and executed successfully. DENIED and INCONCLUSIVE evaluations finalized without permits, and a foreign evaluator was rejected. The child was recovered through Studionet's transaction index (`triggered_by` / `triggered_on=finalized`), although the SDK's `getTriggeredTransactionIds` returned an empty list.
+The real Studionet lifecycle is recorded in `deployment-manifest.generated.json` and [`FINAL_HANDOFF_STATUS.md`](FINAL_HANDOFF_STATUS.md). The successful conditional evaluation [`0x9a3ae1280855be88d25c9480f02749430d92c0c45fbf71f93155ee33028d6141`](https://explorer-studio.genlayer.com/tx/0x9a3ae1280855be88d25c9480f02749430d92c0c45fbf71f93155ee33028d6141) triggered permit child [`0xf66546b3631cf3e27afd835da5bc98845d2de2fee2cedae2ff63e510bb9e845f`](https://explorer-studio.genlayer.com/tx/0xf66546b3631cf3e27afd835da5bc98845d2de2fee2cedae2ff63e510bb9e845f); both finalized and executed successfully. `DENIED` and `INCONCLUSIVE` evaluations finalized without permits, and a foreign evaluator was rejected. All hashes and observed outcomes are in the manifest. The child was recovered through Studionet's transaction index (`triggered_by` / `triggered_on=finalized`), although the SDK's `getTriggeredTransactionIds` returned an empty list.
 
 Production frontend: [https://usebond-frontend.vercel.app/](https://usebond-frontend.vercel.app/). The production site is verified on `main` commit `1260da4`; the hosted Permission Lens now detects the finalized permit child and links to a working public Passport. The production bundle contains all three canonical Studionet addresses, and all five public routes returned HTTP 200. `.env.generated` records the public deployment values; no private key belongs in Vercel or this repository.
 
-The live contract lifecycle, including finalized parent and permit-child transactions, is fully evidenced in `deployment-manifest.generated.json`. A wallet-connected write/evaluation initiated from the hosted frontend has not been re-run after the latest deployment; do not treat the HTTP and asset checks as proof of that separate UI flow.
+The live contract lifecycle is complete. In addition to the recorded Studionet transaction evidence, the production frontend was manually exercised through the wallet-connected lifecycle by the user. The finalized conditional result and passport are visible in the hosted app. This manual interaction is separate from automated HTTP and asset checks.
 
 The Permission Lens and public Passport also have a strict recovery path for the current Studionet explorer/RPC read failure on the PermitBook address. If a PermitBook view call fails, the frontend verifies the finalized successful `issue_permit` child transaction from the canonical engine to the canonical PermitBook, then matches its key, holder, outcome, and both digests against the stored intent before presenting the passport. It never treats an accepted parent or an unverified transaction as issuance.
 

@@ -24,7 +24,7 @@
 - [x] Frontend typecheck and Next production build passed; results recorded in validation report.
 - [x] Registry and licence folio handle boolean and other JSON rights-map values without calling string methods on non-strings.
 - [x] Vercel deployment verified through commit `1260da4`; all five production routes return HTTP 200, the Permission Lens recognizes finalized issuance, and the public Passport renders the matching finalized transaction and conditions.
-- [ ] Re-run a wallet-connected write/evaluation through the hosted frontend and verify the resulting UI states. Existing on-chain lifecycle proof does not substitute for this UI integration check.
+- [x] Wallet-connected hosted frontend lifecycle manually completed by the user after the frontend fixes; production Permission Passport screenshot confirms the finalized conditional result and displayed conditions. See `FINAL_HANDOFF_STATUS.md`.
 
 ## Frontend and handoff
 
