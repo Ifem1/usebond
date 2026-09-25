@@ -80,7 +80,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   top: calc(100% + 9px);
   right: 0;
   z-index: 80;
-  width: 190px;
+  width: min(300px, calc(100vw - 32px));
   overflow: hidden;
   padding: 6px;
   border: 1px solid rgba(69,23,47,.12);
@@ -88,6 +88,26 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   background: rgba(255,250,253,.98);
   box-shadow: 0 20px 55px rgba(69,23,47,.18);
   backdrop-filter: blur(18px);
+}
+.identity-menu-address {
+  padding: 10px 11px 11px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.identity-menu-address small {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--pink);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.identity-menu-address code {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--plum);
+  font-size: 11px;
 }
 .identity-menu-item {
   width: 100%;

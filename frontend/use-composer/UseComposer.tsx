@@ -61,7 +61,7 @@ export function UseComposer({ licence }: { licence: LicenceRecord }) {
     setBusy(true);
     setError("");
     try {
-      const account = identity.address || (await identity.connect());
+      const account = (await identity.refreshAccount()) || (await identity.connect());
       await identity.ensureNetwork();
       const key = newIntentKey();
       const hash = await createIntent(account, key, licence.licence_key, facts);
@@ -90,7 +90,7 @@ export function UseComposer({ licence }: { licence: LicenceRecord }) {
     setBusy(true);
     setError("");
     try {
-      const account = identity.address || (await identity.connect());
+      const account = (await identity.refreshAccount()) || (await identity.connect());
       await identity.ensureNetwork();
       let observation = await observeTransaction(tx.hash, setTx, { maxPolls: 120 });
       if (observation.stage === "READY_TO_FINALIZE") {

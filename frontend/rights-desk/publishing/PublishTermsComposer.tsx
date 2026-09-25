@@ -76,7 +76,7 @@ export function PublishTermsComposer({ onClose, onRegistered }: { onClose: () =>
     setError("");
     setBusy(true);
     try {
-      const account = identity.address || (await identity.connect());
+      const account = (await identity.refreshAccount()) || (await identity.connect());
       await identity.ensureNetwork();
       const hash = await registerLicence(account, {
         key: form.key.trim(),

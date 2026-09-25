@@ -10,6 +10,7 @@ export type RightsIdentity = {
   ready: boolean;
   error: string;
   connect: () => Promise<string>;
+  refreshAccount: () => Promise<string | null>;
   disconnect: () => void;
   ensureNetwork: () => Promise<void>;
 };
@@ -21,6 +22,21 @@ export function RightsIdentityScope({ children }: { children: React.ReactNode })
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
 
+  const refreshAccount = useCallback(async () => {
+    if (window.sessionStorage.getItem(DISCONNECTED_KEY) === "1") return null;
+    try {
+      const accounts = await existingAccounts();
+      const current = accounts[0] || null;
+      setAddress(current);
+      setReady(true);
+      return current;
+    } catch (e: any) {
+      setError(e?.message || "Could not refresh the connected wallet.");
+      setReady(true);
+      return null;
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     const manuallyDisconnected = window.sessionStorage.getItem(DISCONNECTED_KEY) === "1";
@@ -28,9 +44,7 @@ export function RightsIdentityScope({ children }: { children: React.ReactNode })
     if (manuallyDisconnected) {
       setReady(true);
     } else {
-      existingAccounts()
-        .then((accounts) => mounted && setAddress(accounts[0] || null))
-        .finally(() => mounted && setReady(true));
+      void refreshAccount().finally(() => { if (mounted) setReady(true); });
     }
 
     const p = provider();
@@ -39,12 +53,21 @@ export function RightsIdentityScope({ children }: { children: React.ReactNode })
       setAddress(accounts?.[0] || null);
       setError("");
     };
+    const refreshOnReturn = () => {
+      if (!document.hidden && window.sessionStorage.getItem(DISCONNECTED_KEY) !== "1") {
+        void refreshAccount();
+      }
+    };
     if (p?.on) p.on("accountsChanged", accountHandler);
+    window.addEventListener("focus", refreshOnReturn);
+    document.addEventListener("visibilitychange", refreshOnReturn);
     return () => {
       mounted = false;
       p?.removeListener?.("accountsChanged", accountHandler);
+      window.removeEventListener("focus", refreshOnReturn);
+      document.removeEventListener("visibilitychange", refreshOnReturn);
     };
-  }, []);
+  }, [refreshAccount]);
 
   const connect = useCallback(async () => {
     setError("");
@@ -76,8 +99,8 @@ export function RightsIdentityScope({ children }: { children: React.ReactNode })
   }, []);
 
   const value = useMemo(
-    () => ({ address, ready, error, connect, disconnect, ensureNetwork }),
-    [address, ready, error, connect, disconnect, ensureNetwork],
+    () => ({ address, ready, error, connect, refreshAccount, disconnect, ensureNetwork }),
+    [address, ready, error, connect, refreshAccount, disconnect, ensureNetwork],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
@@ -155,7 +178,8 @@ export function RightsIdentityMark() {
       <button
         className="identity-mark"
         type="button"
-        aria-label="Open wallet menu"
+        title={identity.address}
+        aria-label={`Connected wallet ${identity.address}; open wallet menu`}
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((value) => !value)}
@@ -166,6 +190,10 @@ export function RightsIdentityMark() {
 
       {open && (
         <div className="identity-dropdown" role="menu">
+          <div className="identity-menu-address">
+            <small>Connected wallet</small>
+            <code>{identity.address}</code>
+          </div>
           <button
             type="button"
             role="menuitem"

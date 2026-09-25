@@ -62,7 +62,7 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
     setBusy(true);
     setError("");
     try {
-      const account = identity.address || (await identity.connect());
+      const account = (await identity.refreshAccount()) || (await identity.connect());
       await identity.ensureNetwork();
       const hash = await evaluateIntent(account, intentKey);
       setActiveHash(hash);
@@ -88,7 +88,7 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
     setBusy(true);
     setError("");
     try {
-      const account = identity.address || (await identity.connect());
+      const account = (await identity.refreshAccount()) || (await identity.connect());
       await identity.ensureNetwork();
       await finalizeTransaction(activeHash, account);
       const parent = await observeTransaction(activeHash, setTx, { maxPolls: 120 });
