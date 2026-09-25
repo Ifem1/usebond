@@ -22,7 +22,8 @@
 - [x] Provisional state is not represented as final permission; UI verifies the finalized parent and finalized-only permit record. Child transaction was recovered from Studionet's index.
 - [x] Frontend typecheck and Next production build passed; results recorded in validation report.
 - [x] Registry and licence folio handle boolean and other JSON rights-map values without calling string methods on non-strings.
-- [ ] Owner redeploys Vercel using `.env.generated`, then verifies production wallet-connected flow.
+- [x] Vercel deployment completed for frontend commit `6d975e2`; all five production routes return HTTP 200 and the public bundle contains the canonical contract addresses and current publisher validation.
+- [ ] Re-run a wallet-connected write/evaluation through the hosted frontend and verify the resulting UI states. Existing on-chain lifecycle proof does not substitute for this UI integration check.
 
 ## Frontend and handoff
 

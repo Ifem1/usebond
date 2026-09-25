@@ -28,7 +28,7 @@ The app-level `getTriggeredTransactionIds` call returned an empty list, but the 
 
 ## Production route failure and fix
 
-The production Registry crash was traced from the supplied Brave console screenshot to `rights_map` rendering. The live `UBL-FINAL-04` record uses boolean rights-map values, while the Registry and licence folio called `.toLowerCase()` on every value. Both components now safely format JSON values, render booleans as Yes/No, and only classify string labels. The Vercel route and JavaScript assets returned HTTP 200; the deployed frontend needs to be rebuilt/redeployed from the fix commit before the public route works.
+The production Registry crash was traced from the supplied Brave console screenshot to `rights_map` rendering. The live `UBL-FINAL-04` record uses boolean rights-map values, while the Registry and licence folio called `.toLowerCase()` on every value. Both components now safely format JSON values, render booleans as Yes/No, and only classify string labels. GitHub reports Vercel deployment success for frontend commit `6d975e2`; all five production routes return HTTP 200, and the public client bundle contains the canonical addresses and updated publisher validation.
 
 ## Validation status
 
@@ -37,6 +37,7 @@ The production Registry crash was traced from the supplied Brave console screens
 - GenVM lint syntax checks: passed for all three contracts. SDK validation could not load the linter cache due Windows access denied.
 - Direct-mode tests: 2 passed, 4 blocked by `genlayer-test` 0.29.2 Windows temp-file unlink (`WinError 32`) before contract test execution.
 - TypeScript typecheck and Next production build passed before and after the rights-map rendering fix; all routes generated.
-- Production Vercel deployment/environment: owner action. Use the public values in `.env.generated`; deploy is intentionally not performed by this agent.
+- Production Vercel deployment: completed for frontend commit `6d975e2`; subsequent `main` commits contain evidence/documentation updates only. Public bundle addresses match the canonical manifest.
+- Remaining production UX verification: a wallet-connected write/evaluation from the hosted frontend has not been repeated after that deployment. Existing live contract lifecycle evidence is complete; this is a distinct frontend integration check.
 
-This repository is not marked submission-ready until the owner-controlled Vercel environment redeployment and production wallet-connected verification are confirmed. Private test keys were not included in Git or this handoff.
+This repository is not marked submission-ready while the hosted wallet-connected flow and the unchecked contract-tooling/source-match checklist items remain unverified. Private test keys were not included in Git or this handoff.

@@ -105,9 +105,9 @@ All three deployments finalized. The PermitBook binding transaction is `0x8cd59a
 
 The real Studionet lifecycle is recorded in `deployment-manifest.generated.json`. The successful conditional evaluation `0x9a3ae1280855be88d25c9480f02749430d92c0c45fbf71f93155ee33028d6141` triggered permit child `0xf66546b3631cf3e27afd835da5bc98845d2de2fee2cedae2ff63e510bb9e845f`; both finalized and executed successfully. DENIED and INCONCLUSIVE evaluations finalized without permits, and a foreign evaluator was rejected. The child was recovered through Studionet's transaction index (`triggered_by` / `triggered_on=finalized`), although the SDK's `getTriggeredTransactionIds` returned an empty list.
 
-For Vercel, copy the six public values from `.env.generated` and redeploy the frontend yourself. No private keys belong in Vercel or this repository.
+Production frontend: [https://usebond-frontend.vercel.app/](https://usebond-frontend.vercel.app/). GitHub reports Vercel deployment success for the frontend-fix commit `6d975e2`; the latest `main` commit contains documentation/evidence corrections only. The production bundle was checked for all three canonical Studionet addresses and the current publisher validation. All five public routes returned HTTP 200. `.env.generated` records the public deployment values; no private key belongs in Vercel or this repository.
 
-All four transactions were verified `FINALIZED` on Studionet 61999. The public frontend environment is recorded in `.env.generated`; copy those `NEXT_PUBLIC_*` values into the Vercel project before deploying the frontend.
+The live contract lifecycle, including finalized parent and permit-child transactions, is fully evidenced in `deployment-manifest.generated.json`. A wallet-connected write/evaluation initiated from the hosted frontend has not been re-run after the latest deployment; do not treat the HTTP and asset checks as proof of that separate UI flow.
 
 ## Submission principle
 
