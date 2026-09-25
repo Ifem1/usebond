@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { LicenceRecord, PermitRecord } from "@/genlayer-runtime/models";
-import { findFinalizedPermitTransaction, readLicence, readPermit } from "@/genlayer-runtime/reader";
+import { findFinalizedPermitTransaction, readIntent, readLicence, readPermit } from "@/genlayer-runtime/reader";
+import { permitFromFinalizedIssuance } from "@/genlayer-runtime/permit-evidence";
 import { inspectTransaction } from "@/genlayer-runtime/tx-observer";
-import { transactionExecutionOutcome } from "@/genlayer-runtime/execution-outcome";
 import { deploymentReady, explorerAddress, explorerTx, ADDRESSES } from "@/genlayer-runtime/config";
 
 export function PermitPassport({ permitKey }: { permitKey: string }) {
@@ -22,34 +22,45 @@ export function PermitPassport({ permitKey }: { permitKey: string }) {
     if (!deploymentReady()) { setLoading(false); return; }
     (async () => {
       try {
-        const value = await readPermit(permitKey);
-        setPermit(value);
-        if (value) setLicence(await readLicence(value.licence_key));
-
-        // A finalized callback can be reflected in the parent evaluation's
-        // finalized state without a separately discoverable child tx on
-        // Studionet. Accept the linked parent only for a canonical finalized-only record.
-        const recordIsCanonical = Boolean(
-          value?.finalized_only &&
-          value.issuer.toLowerCase() === ADDRESSES.engine.toLowerCase() &&
-          (value.outcome === "PERMITTED" || value.outcome === "PERMITTED_WITH_CONDITIONS")
-        );
-
+        let value: PermitRecord | null = null;
+        let permitReadUnavailable = false;
+        try { value = await readPermit(permitKey); } catch { permitReadUnavailable = true; }
         const hinted = query.get("tx") || "";
-        if (recordIsCanonical && /^0x[0-9a-fA-F]{64}$/.test(hinted)) {
-          const observation = await inspectTransaction(hinted);
-          if (observation.stage === "FINALIZED" && transactionExecutionOutcome(observation.raw) === "SUCCESS") {
-            setIssuanceTx(hinted);
-            setVerified(true);
-            return;
-          }
+        let discovered = /^0x[0-9a-fA-F]{64}$/.test(hinted) ? hinted : "";
+        let observation = discovered ? await inspectTransaction(discovered).catch(() => null) : null;
+        let evidence = observation ? permitFromFinalizedIssuance(observation.raw, permitKey) : null;
+        if (!evidence) {
+          discovered = await findFinalizedPermitTransaction(permitKey) || "";
+          observation = discovered ? await inspectTransaction(discovered).catch(() => null) : null;
+          evidence = observation ? permitFromFinalizedIssuance(observation.raw, permitKey) : null;
+        }
+        if (!discovered || !observation || !evidence) {
+          if (value) setPermit(value);
+          else if (permitReadUnavailable) setError("The PermitBook read endpoint is unavailable, and no finalized successful issuance transaction could be verified. This page will not claim a permission passport.");
+          return;
         }
 
-        const discovered = recordIsCanonical ? await findFinalizedPermitTransaction(permitKey) : null;
-        if (discovered) {
-          setIssuanceTx(discovered);
-          setVerified(true);
+        const intent = await readIntent(evidence.intent_key);
+        const verifiedEvidence = permitFromFinalizedIssuance(observation.raw, permitKey, intent);
+        if (!intent || !verifiedEvidence) {
+          setError("The finalized issuance transaction does not match the stored intent. The passport remains withheld.");
+          return;
         }
+        if (value && (
+          value.permit_key !== verifiedEvidence.permit_key ||
+          value.intent_digest !== verifiedEvidence.intent_digest ||
+          value.terms_digest !== verifiedEvidence.terms_digest ||
+          value.holder.toLowerCase() !== verifiedEvidence.holder.toLowerCase()
+        )) {
+          setError("The PermitBook record does not match its finalized issuance transaction. The passport remains withheld.");
+          return;
+        }
+
+        value = value || verifiedEvidence;
+        setPermit(value);
+        setLicence(await readLicence(value.licence_key));
+        setIssuanceTx(discovered);
+        setVerified(true);
       } catch (e: any) {
         setError(e?.message || "Could not read this permission credential.");
       } finally {
@@ -64,7 +75,7 @@ export function PermitPassport({ permitKey }: { permitKey: string }) {
         {!deploymentReady() && <div className="setup-memo"><strong>Deployment configuration required.</strong> Public permission passports become live after the permit book is deployed on Studionet 61999.</div>}
         {loading && <div className="empty-ledger">Reading permission credential…</div>}
         {error && <p className="error-ink">{error}</p>}
-        {!loading && deploymentReady() && !permit && <div className="empty-ledger">No permission credential exists under this key.</div>}
+        {!loading && deploymentReady() && !permit && !error && <div className="empty-ledger">No permission credential exists under this key.</div>}
         {permit && !verified && (
           <div className="setup-memo">
             <strong>Permit record found, finality not verified.</strong> USEBOND will not present this record as a final permission passport until its finalized evaluation is independently observed.
@@ -86,7 +97,7 @@ export function PermitPassport({ permitKey }: { permitKey: string }) {
                 <div className="passport-field"><small>Holder</small>{permit.holder}</div>
                 <div className="passport-field"><small>Licence</small>{permit.licence_key}</div>
                 <div className="passport-field"><small>Intent</small>{permit.intent_key}</div>
-                <div className="passport-field"><small>Issued</small>{permit.issued_at}</div>
+                <div className="passport-field"><small>Issued</small>{permit.issued_at || "Recorded by finalized issuance"}</div>
                 <div className="passport-field"><small>Terms digest</small>{permit.terms_digest.slice(0, 20)}…</div>
                 <div className="passport-field"><small>Intent digest</small>{permit.intent_digest.slice(0, 20)}…</div>
               </div>
@@ -106,7 +117,7 @@ export function PermitPassport({ permitKey }: { permitKey: string }) {
               <div className="tx-ribbon">
                 <strong>FINALIZED</strong>
                 <code>{issuanceTx.slice(0, 18)}…</code>
-                <a href={explorerTx(issuanceTx)} target="_blank" rel="noreferrer">finalized evaluation / issuance ↗</a>
+                <a href={explorerTx(issuanceTx)} target="_blank" rel="noreferrer">finalized permit issuance ↗</a>
                 <a href={explorerAddress(ADDRESSES.permitBook)} target="_blank" rel="noreferrer">permit book ↗</a>
               </div>
             </div>

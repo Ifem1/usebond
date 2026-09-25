@@ -3,7 +3,7 @@
 import { ADDRESSES, deploymentReady } from "./config";
 import { readonlyClient } from "./client";
 import { inspectTransaction } from "./tx-observer";
-import { transactionExecutionOutcome } from "./execution-outcome";
+import { permitFromFinalizedIssuance } from "./permit-evidence";
 import type { IntentRecord, LicenceRecord, PermitRecord } from "./models";
 import { parseJson } from "./models";
 
@@ -74,16 +74,15 @@ export async function findFinalizedPermitTransaction(permitKey: string): Promise
   try {
     const result = await client.request({
       method: "sim_getTransactionsForAddress",
-      params: [ADDRESSES.permitBook.toLowerCase() as `0x${string}`],
+      params: [ADDRESSES.permitBook.toLowerCase() as `0x${string}`, "to"],
     } as any);
     if (!Array.isArray(result)) return null;
-    for (const item of result) {
-      if (!JSON.stringify(item).includes(permitKey)) continue;
+    for (const item of result.slice(0, 100)) {
       const tx: any = item;
       const hash = String(tx?.hash || tx?.transaction_hash || tx?.transactionHash || tx?.id || "");
       if (!/^0x[0-9a-fA-F]{64}$/.test(hash)) continue;
       const observation = await inspectTransaction(hash);
-      if (observation.stage === "FINALIZED" && transactionExecutionOutcome(observation.raw) === "SUCCESS") return hash;
+      if (permitFromFinalizedIssuance(observation.raw, permitKey)) return hash;
     }
   } catch {
     return null;

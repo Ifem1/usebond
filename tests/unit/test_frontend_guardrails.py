@@ -44,5 +44,9 @@ def test_no_walletconnect_or_snap_dependency():
 
 def test_permission_passport_requires_finality_verification():
     source = (FRONTEND / "permit-book" / "PermitPassport.tsx").read_text()
-    assert 'observation.stage === "FINALIZED"' in source
+    assert "permitFromFinalizedIssuance" in source
     assert "findFinalizedPermitTransaction" in source
+    verifier = (FRONTEND / "genlayer-runtime" / "permit-evidence-core.mjs").read_text()
+    assert 'status !== "FINALIZED"' in verifier
+    assert 'decoded.method !== "issue_permit"' in verifier
+    assert "expectedIntent.terms_digest !== permit.terms_digest" in verifier

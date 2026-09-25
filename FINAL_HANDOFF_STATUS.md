@@ -30,6 +30,8 @@ The app-level `getTriggeredTransactionIds` call returned an empty list, but the 
 
 The production Registry crash was traced from the supplied Brave console screenshot to `rights_map` rendering. The live `UBL-FINAL-04` record uses boolean rights-map values, while the Registry and licence folio called `.toLowerCase()` on every value. Both components now safely format JSON values, render booleans as Yes/No, and only classify string labels. GitHub reports Vercel deployment success for frontend commit `6d975e2`; all five production routes return HTTP 200, and the public client bundle contains the canonical addresses and updated publisher validation.
 
+The Permission Lens / Passport read issue was traced to the Studionet explorer's PermitBook view endpoint returning `Contract 0xA7Ca373c4eb0A9da8770B310C60C1e3CE61F9676 not found` despite a real finalized issue transaction. The current intent's parent evaluation `0x933ffa468b57546cb69cc5058365c3b1be9448f2e7a4b0fbc9713c0313b9f906` finalized and triggered child `0x188093adcb0aabc38dd960e6c7fb237f698760341138b576052b5b23a90b2d53`, which finalized successfully and returned `UBP-UBI-B0873E620B54`. The child targets the canonical PermitBook, originates from the canonical engine, and its calldata contains the conditional assessment for intent `UBI-B0873E620B54`. The frontend now recovers that evidence from finalized `issue_permit` calldata and cross-checks the stored intent and both digests; no contract redeployment is needed for this frontend-only correction.
+
 ## Validation status
 
 - Python compile: passed.
@@ -37,6 +39,7 @@ The production Registry crash was traced from the supplied Brave console screens
 - GenVM lint syntax checks: passed for all three contracts. SDK validation could not load the linter cache due Windows access denied.
 - Direct-mode tests: 2 passed, 4 blocked by `genlayer-test` 0.29.2 Windows temp-file unlink (`WinError 32`) before contract test execution.
 - TypeScript typecheck and Next production build passed before and after the rights-map rendering fix; all routes generated.
+- Permission issuance fallback tests: **5/5 passed** (`node --test tests/unit/permit-evidence.test.mjs`); final frontend typecheck and production build passed with the recovery path.
 - Production Vercel deployment: completed for frontend commit `6d975e2`; subsequent `main` commits contain evidence/documentation updates only. Public bundle addresses match the canonical manifest.
 - Remaining production UX verification: a wallet-connected write/evaluation from the hosted frontend has not been repeated after that deployment. Existing live contract lifecycle evidence is complete; this is a distinct frontend integration check.
 

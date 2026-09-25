@@ -20,6 +20,7 @@
 - [x] DENIED and INCONCLUSIVE finalized; no permit records.
 - [x] Foreign evaluator attempt left intent state unchanged.
 - [x] Provisional state is not represented as final permission; UI verifies the finalized parent and finalized-only permit record. Child transaction was recovered from Studionet's index.
+- [x] Permit passport recovers finalized issuance from canonical successful `issue_permit` calldata when the Studionet PermitBook view endpoint is unavailable; executable recovery tests pass 5/5.
 - [x] Frontend typecheck and Next production build passed; results recorded in validation report.
 - [x] Registry and licence folio handle boolean and other JSON rights-map values without calling string methods on non-strings.
 - [x] Vercel deployment completed for frontend commit `6d975e2`; all five production routes return HTTP 200 and the public bundle contains the canonical contract addresses and current publisher validation.

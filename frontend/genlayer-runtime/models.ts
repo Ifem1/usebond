@@ -88,7 +88,7 @@ export type PermitRecord = {
   material_clauses: MaterialClause[];
   terms_digest: string;
   intent_digest: string;
-  issued_at: string;
+  issued_at?: string;
   issuer: string;
   finalized_only: boolean;
 };

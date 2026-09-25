@@ -76,6 +76,7 @@ The sample licence key is regenerated each time to avoid collisions with immutab
 ```bash
 python -m py_compile contracts/*.py support/*.py
 pytest tests/unit -q
+node --test tests/unit/permit-evidence.test.mjs
 ```
 
 After installing the current GenLayer toolchain:
@@ -118,6 +119,8 @@ The real Studionet lifecycle is recorded in `deployment-manifest.generated.json`
 Production frontend: [https://usebond-frontend.vercel.app/](https://usebond-frontend.vercel.app/). GitHub reports Vercel deployment success for the frontend-fix commit `6d975e2`; the latest `main` commit contains documentation/evidence corrections only. The production bundle was checked for all three canonical Studionet addresses and the current publisher validation. All five public routes returned HTTP 200. `.env.generated` records the public deployment values; no private key belongs in Vercel or this repository.
 
 The live contract lifecycle, including finalized parent and permit-child transactions, is fully evidenced in `deployment-manifest.generated.json`. A wallet-connected write/evaluation initiated from the hosted frontend has not been re-run after the latest deployment; do not treat the HTTP and asset checks as proof of that separate UI flow.
+
+The Permission Lens and public Passport also have a strict recovery path for the current Studionet explorer/RPC read failure on the PermitBook address. If a PermitBook view call fails, the frontend verifies the finalized successful `issue_permit` child transaction from the canonical engine to the canonical PermitBook, then matches its key, holder, outcome, and both digests against the stored intent before presenting the passport. It never treats an accepted parent or an unverified transaction as issuance.
 
 ## Submission principle
 

@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { Assessment, IntentRecord, LicenceRecord, PermitRecord } from "@/genlayer-runtime/models";
 import { parseJson } from "@/genlayer-runtime/models";
-import { readIntent, readLicence, readPermit } from "@/genlayer-runtime/reader";
+import { findFinalizedPermitTransaction, readIntent, readLicence, readPermit } from "@/genlayer-runtime/reader";
+import { permitFromFinalizedIssuance } from "@/genlayer-runtime/permit-evidence";
 import { evaluateIntent } from "@/genlayer-runtime/writer";
 import { finalizeTransaction, inspectTransaction, observeTransaction, triggeredTransactions, type TxObservation } from "@/genlayer-runtime/tx-observer";
 import { transactionExecutionOutcome } from "@/genlayer-runtime/execution-outcome";
@@ -39,7 +40,7 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
     if (nextIntent) {
       const [nextLicence, nextPermit] = await Promise.all([
         readLicence(nextIntent.licence_key),
-        nextIntent.permit_key ? readPermit(nextIntent.permit_key) : Promise.resolve(null),
+        nextIntent.permit_key ? readPermit(nextIntent.permit_key).catch(() => null) : Promise.resolve(null),
       ]);
       setLicence(nextLicence);
       setPermit(nextPermit);
@@ -57,6 +58,26 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
       .then(setTx)
       .catch(() => undefined);
   }, [activeHash]);
+
+  useEffect(() => {
+    if (!intent?.permit_key || !assessment?.outcome.startsWith("PERMITTED") || tx?.stage !== "FINALIZED" || transactionExecutionOutcome(tx.raw) !== "SUCCESS" || permitTx) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const childHash = await findFinalizedPermitTransaction(intent.permit_key);
+        if (!childHash || cancelled) return;
+        const child = await inspectTransaction(childHash);
+        const recovered = permitFromFinalizedIssuance(child.raw, intent.permit_key, intent);
+        if (recovered && !cancelled) {
+          setPermit(recovered);
+          setPermitTx(childHash);
+        }
+      } catch {
+        // Keep issuance pending unless a finalized child can be independently verified.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [intent, assessment?.outcome, tx?.stage, permitTx]);
 
   async function runEvaluation() {
     setBusy(true);
@@ -105,9 +126,14 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
             }
             const verifiedChild = await inspectTransaction(childHash);
             if (verifiedChild.stage === "FINALIZED" && transactionExecutionOutcome(verifiedChild.raw) === "SUCCESS") {
-              setPermitTx(childHash);
               const current = await readIntent(intentKey);
-              if (current?.permit_key) setPermit(await readPermit(current.permit_key));
+              const recovered = current?.permit_key
+                ? permitFromFinalizedIssuance(verifiedChild.raw, current.permit_key, current)
+                : null;
+              if (recovered) {
+                setPermit(recovered);
+                setPermitTx(childHash);
+              }
               break;
             }
           }
@@ -118,7 +144,7 @@ export function PermissionLens({ intentKey }: { intentKey: string }) {
         // finalized parent and a matching finalized-only permit record.
         const current = await readIntent(intentKey);
         if (current?.permit_key && current.assessment_outcome?.startsWith("PERMITTED")) {
-          const issued = await readPermit(current.permit_key);
+          const issued = await readPermit(current.permit_key).catch(() => null);
           if (
             issued?.finalized_only &&
             issued.intent_key === current.intent_key &&
