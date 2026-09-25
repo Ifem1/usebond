@@ -35,7 +35,7 @@ d752dafb755cd313b51493ebadeada088b8d5efb48a60bb50088ecd775d3e1bc  ./frontend/gen
 dde48783c836fcbcc1373457e9b665a76a2ac65a851e30ef3bac3825a4b168e0  ./frontend/genlayer-runtime/models.ts
 4c0cb0bc24be8451768ded6980a73b272b7c86f390a7303f8599542dc3def200  ./frontend/genlayer-runtime/reader.ts
 01e862acb76b9c5b0c12e7db7f629c5d615588b2db2dc32f0f2f1bb00407f639  ./frontend/genlayer-runtime/tx-observer.ts
-c871401e55f2e4ae1b9e18586101c6e23bc759c312c21a97c5ffc559a5257430  ./frontend/genlayer-runtime/writer.ts
+31b04eab04e1ab3da29b73507cd3687582ca5f5544d810057d74dedfeb604364  ./frontend/genlayer-runtime/writer.ts
 1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b  ./frontend/next-env.d.ts
 c5efcdb15ee66db5a3a749082d8a2d68abdd0555ce251baee0e3fd920b4c55b5  ./frontend/next.config.ts
 c919b328c803b899c5572fc490ff6bb474a68336a8982a3b9dd146ddf29bb21a  ./frontend/package.json
