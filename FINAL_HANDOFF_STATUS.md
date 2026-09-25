@@ -26,13 +26,17 @@ All contract deployments finalized. The replacement stack was used for all the l
 
 The RPC did not expose a separate triggered child transaction ID for the finalized callback, although the callback's PermitBook state is present. The frontend therefore recognizes this exact runtime behavior only after the parent evaluation is finalized and the matching canonical finalized-only record is verified. It does not label the parent as a child issuance transaction.
 
+## Production route failure and fix
+
+The production Registry crash was traced from the supplied Brave console screenshot to `rights_map` rendering. The live `UBL-FINAL-04` record uses boolean rights-map values, while the Registry and licence folio called `.toLowerCase()` on every value. Both components now safely format JSON values, render booleans as Yes/No, and only classify string labels. The Vercel route and JavaScript assets returned HTTP 200; the deployed frontend needs to be rebuilt/redeployed from the fix commit before the public route works.
+
 ## Validation status
 
 - Python compile: passed.
 - Unit tests: 29 passed.
 - GenVM lint syntax checks: passed for all three contracts. SDK validation could not load the linter cache due Windows access denied.
 - Direct-mode tests: 2 passed, 4 blocked by `genlayer-test` 0.29.2 Windows temp-file unlink (`WinError 32`) before contract test execution.
-- TypeScript typecheck: passed (`tsc --noEmit`). Next production build: passed (`next build`; all routes generated).
+- TypeScript typecheck and Next production build passed before and after the rights-map rendering fix; all routes generated.
 - Production Vercel deployment/environment: owner action. Use the public values in `.env.generated`; deploy is intentionally not performed by this agent.
 
 This repository is not marked submission-ready until the owner-controlled Vercel environment redeployment and production wallet-connected verification are confirmed. Private test keys were not included in Git or this handoff.

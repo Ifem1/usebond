@@ -21,6 +21,7 @@
 - [x] Foreign evaluator attempt left intent state unchanged.
 - [x] Provisional state is not represented as final permission; UI supports finalized-callback state without child transaction ID.
 - [x] Frontend typecheck and Next production build passed; results recorded in validation report.
+- [x] Registry and licence folio handle boolean and other JSON rights-map values without calling string methods on non-strings.
 - [ ] Owner redeploys Vercel using `.env.generated`, then verifies production wallet-connected flow.
 
 ## Frontend and handoff

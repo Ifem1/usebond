@@ -5,11 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { deploymentReady } from "@/genlayer-runtime/config";
 import { listLicenceKeys, readLicence } from "@/genlayer-runtime/reader";
-import type { LicenceRecord } from "@/genlayer-runtime/models";
+import { formatRightsMapValue, type LicenceRecord } from "@/genlayer-runtime/models";
 import { RightsIdentityMark } from "@/signer/rights-identity";
 import { PublishTermsComposer } from "@/rights-desk/publishing/PublishTermsComposer";
 
-function tone(value: string): string {
+function tone(value: unknown): string {
+  if (typeof value !== "string") return "neutral";
   const v = value.toLowerCase();
   if (v.includes("deny") || v.includes("prohibit") || v.includes("not permitted")) return "deny";
   if (v.includes("conditional") || v.includes("restrict") || v.includes("required")) return "conditional";
@@ -133,7 +134,7 @@ export function RegistrySurface() {
               </div>
               <div className="rights-map-mini">
                 {Object.entries(item.rights_map || {}).slice(0, 6).map(([key, value]) => (
-                  <span className={`right-tag ${tone(value)}`} key={key}>{key.replaceAll("_", " ")}: {value}</span>
+                  <span className={`right-tag ${tone(value)}`} key={key}>{key.replaceAll("_", " ")}: {formatRightsMapValue(value)}</span>
                 ))}
               </div>
               <div className="rights-meta" style={{ textAlign: "right" }}>frozen<br />{item.terms_digest.slice(0, 9)}…</div>

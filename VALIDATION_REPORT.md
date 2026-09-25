@@ -19,7 +19,9 @@ Chain 61999, RPC `https://studio.genlayer.com/api`. Canonical deployments, final
 
 ## Frontend
 
-`npm run typecheck`: **passed**. `npm run build`: **passed**; all five application routes generated (plus Next not-found). Vercel production redeployment and environment updates are intentionally left to the owner; `.env.generated` contains the public variables for the current canonical stack. The injected-wallet model and product visual design remain unchanged.
+The production crash shown in the user's console was `TypeError: r.toLowerCase is not a function` while rendering `rights_map`. The deployed `UBL-FINAL-04` record contains boolean rights-map values; Registry and folio components previously assumed strings. The fix formats booleans as Yes/No and only applies semantic string classification to string values. `npm run typecheck` and `npm run build`: **passed after the fix**; all five application routes generated (plus Next not-found). HTTP checks returned 200 for all five route URLs and their JS bundles. Vercel production redeployment from the fix commit is still required. The injected-wallet model and product visual design remain unchanged.
+
+The shared rights-map formatter smoke test passed **5/5** cases: true, false, string label, number, and nested object.
 
 ## Historical failure
 

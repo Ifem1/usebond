@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import type { LicenceRecord } from "@/genlayer-runtime/models";
+import { formatRightsMapValue, type LicenceRecord } from "@/genlayer-runtime/models";
 import { readLicence } from "@/genlayer-runtime/reader";
 import { deploymentReady } from "@/genlayer-runtime/config";
 import { RightsIdentityMark } from "@/signer/rights-identity";
 import { UseComposer } from "@/use-composer/UseComposer";
 
-function classFor(value: string) {
+function classFor(value: unknown) {
+  if (typeof value !== "string") return "neutral";
   const v = value.toLowerCase();
   if (v.includes("deny") || v.includes("not permitted")) return "denied";
   if (v.includes("conditional") || v.includes("restricted") || v.includes("required")) return "conditional";
@@ -61,7 +62,7 @@ export function LicenceFolio({ licenceKey }: { licenceKey: string }) {
                 {Object.entries(licence.rights_map || {}).map(([key, value]) => (
                   <div className="map-row" key={key}>
                     <span>{key.replaceAll("_", " ")}</span>
-                    <span className={`map-value ${classFor(value)}`}>{value}</span>
+                    <span className={`map-value ${classFor(value)}`}>{formatRightsMapValue(value)}</span>
                   </div>
                 ))}
                 <div className="setup-memo" style={{ marginTop: 24 }}>

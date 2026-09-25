@@ -1,4 +1,18 @@
-export type RightsMap = Record<string, string>;
+// The registry accepts arbitrary JSON objects for a human-readable rights map.
+// Existing records may contain booleans as well as the publisher's newer
+// string labels, so consumers must not assume every value is text.
+export type RightsMap = Record<string, unknown>;
+
+export function formatRightsMapValue(value: unknown): string {
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
 
 export type LicenceRecord = {
   licence_key: string;
